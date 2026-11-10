@@ -6,7 +6,7 @@ import { useCountUp } from '../lib/hooks'
 import { byPerson, loggedIn } from '../lib/selectors'
 import { useApp } from '../lib/store'
 
-/** The blue "water" card: hours logged this month, one pill per teammate. */
+/** The light-blue "sky" card: hours logged this month, one pill per teammate. */
 export default function HoursWidget() {
   const { tasks, month, go } = useApp()
   const people = byPerson(tasks, month)
@@ -17,7 +17,13 @@ export default function HoursWidget() {
 
   return (
     <section className="win widget contacts hl" style={{ '--n': 0 }}>
-      <i className="water" aria-hidden="true" />
+      {/* drifting pools of light; transform-only animation, so it stays on the compositor */}
+      <span className="sky" aria-hidden="true">
+        <i className="sky-a" />
+        <i className="sky-b" />
+        <i className="sky-c" />
+        <i className="sky-sheen" />
+      </span>
       <CardHead title="Hours Logged">
         <button type="button" className="grip-btn" aria-label="Open hours tracker" onClick={() => go('hours')}>
           <Grip />

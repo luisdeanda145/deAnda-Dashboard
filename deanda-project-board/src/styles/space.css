@@ -425,10 +425,6 @@
   animation: rise 0.8s var(--ease) backwards;
   animation-delay: calc(0.75s + var(--n) * 0.1s);
 }
-.widget > .water {
-  position: absolute;
-  z-index: 0;
-}
 
 /* ---------------- grabber (window bar) ---------------- */
 .grabber {

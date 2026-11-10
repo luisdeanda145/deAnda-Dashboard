@@ -659,31 +659,108 @@
   color: var(--ink-2);
 }
 
-/* the blue water card */
+/* the light-blue sky card
+   A pale sky gradient with three soft pools of light that drift and
+   breathe on slow, out-of-step loops, plus a faint sheen that crosses
+   now and then. Every layer is a plain gradient moved with transform
+   and opacity only, so it never repaints: the GPU just slides it. */
 .contacts {
   flex-shrink: 0;
 }
 .contacts::before {
-  background:
-    radial-gradient(120% 70% at 20% 0%, rgba(160, 205, 255, 0.45), transparent 60%),
-    linear-gradient(170deg, rgb(86 148 250 / 0.66), rgb(30 86 205 / 0.66));
-  backdrop-filter: blur(var(--frost)) saturate(1.6);
-  -webkit-backdrop-filter: blur(var(--frost)) saturate(1.6);
+  background: linear-gradient(168deg, rgb(132 198 255 / 0.9) 0%, rgb(82 156 244 / 0.9) 50%, rgb(44 108 218 / 0.92) 100%);
+  backdrop-filter: blur(var(--frost)) saturate(1.5);
+  -webkit-backdrop-filter: blur(var(--frost)) saturate(1.5);
 }
-.water {
+.widget > .sky {
   position: absolute;
   inset: 0;
+  z-index: 0;
+  overflow: hidden;
   border-radius: inherit;
   pointer-events: none;
-  opacity: 0.55;
-  mix-blend-mode: soft-light;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.008 0.045' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.4 -0.35'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23w)'/%3E%3C/svg%3E");
-  background-size: 400px 400px;
-  animation: drift 26s linear infinite;
+  animation: skyIn 1.6s var(--ease) 0.6s backwards;
 }
-@keyframes drift {
+.sky i {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  will-change: transform;
+}
+/* a bright, almost white pool high on the left */
+.sky-a {
+  width: 120%;
+  height: 90%;
+  left: -40%;
+  top: -42%;
+  background: radial-gradient(closest-side, rgb(236 248 255 / 0.85), rgb(196 230 255 / 0.35) 55%, transparent);
+  animation: skyA 23s ease-in-out infinite alternate;
+}
+/* a cyan pool lower right */
+.sky-b {
+  width: 110%;
+  height: 85%;
+  right: -45%;
+  top: 22%;
+  background: radial-gradient(closest-side, rgb(150 240 255 / 0.75), rgb(120 214 255 / 0.28) 60%, transparent);
+  animation: skyB 31s ease-in-out infinite alternate;
+}
+/* a deeper periwinkle pool along the bottom keeps the white pills legible */
+.sky-c {
+  width: 130%;
+  height: 70%;
+  left: -15%;
+  bottom: -38%;
+  background: radial-gradient(closest-side, rgb(54 84 220 / 0.6), transparent);
+  animation: skyC 37s ease-in-out infinite alternate;
+}
+/* a soft diagonal glint that crosses every 14s */
+.sky-sheen {
+  inset: -20% auto -20% 0;
+  width: 38%;
+  border-radius: 0 !important;
+  background: linear-gradient(100deg, transparent, rgb(255 255 255 / 0.16) 45%, rgb(255 255 255 / 0.26) 50%, rgb(255 255 255 / 0.16) 55%, transparent);
+  transform: translateX(-140%) skewX(-14deg);
+  animation: skySheen 14s ease-in-out 3s infinite;
+}
+@keyframes skyA {
   to {
-    background-position: 400px 120px;
+    transform: translate(24%, 16%) scale(1.15);
+  }
+}
+@keyframes skyB {
+  to {
+    transform: translate(-30%, -20%) scale(0.88);
+  }
+}
+@keyframes skyC {
+  to {
+    transform: translate(12%, -8%) scale(1.1);
+  }
+}
+@keyframes skySheen {
+  0%,
+  62% {
+    transform: translateX(-140%) skewX(-14deg);
+  }
+  100% {
+    transform: translateX(360%) skewX(-14deg);
+  }
+}
+@keyframes skyIn {
+  from {
+    opacity: 0;
+  }
+}
+/* with animations off, the sky holds still rather than flickering */
+[data-motion='off'] .sky,
+[data-motion='off'] .sky i {
+  animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sky,
+  .sky i {
+    animation: none !important;
   }
 }
 .contacts .trend {
