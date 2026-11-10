@@ -1,0 +1,177 @@
+/* ============================================================
+   Board maths — each function reproduces a block of formulas
+   from the spreadsheet's Overview and personal tabs, so the
+   dashboard reports the same numbers the sheet did.
+
+   Rules (from the sheet):
+   · Open = any task whose status is not Done (no status counts as open)
+   · Story points are hours. Planned = Est. Story Points.
+   · Hours logged = Real Story Points of Done tasks, credited to the
+     day in Completed Date.
+   ============================================================ */
+import { PILLARS, TEAM, WORKSTREAMS } from '../data/board'
+import { addDays, daysInMonth, diffDays, inMonth, todayISO } from './format'
+
+const sum = (list, f) => list.reduce((a, t) => a + (f(t) || 0), 0)
+export const isDone = (t) => t.status === 'Done'
+export const isOpen = (t) => !isDone(t)
+
+/** Hours a task has logged in a month (0 unless Done with a Completed Date in it). */
+export const loggedIn = (t, ym) => (isDone(t) && inMonth(t.completed, ym) ? t.real || 0 : 0)
+
+/** Overview → TEAM SUMMARY */
+export function summary(tasks, ym) {
+  const planned = sum(tasks, (t) => t.est)
+  const completed = sum(tasks.filter(isDone), (t) => t.est)
+  return {
+    total: tasks.length,
+    open: tasks.filter(isOpen).length,
+    closed: tasks.filter(isDone).length,
+    inProgress: tasks.filter((t) => t.status === 'In progress').length,
+    notStarted: tasks.filter((t) => t.status === 'Not started').length,
+    blocked: tasks.filter((t) => t.status === 'Blocked').length,
+    planned,
+    completed,
+    donePct: planned ? (completed / planned) * 100 : 0,
+    hours: sum(tasks, (t) => loggedIn(t, ym)),
+  }
+}
+
+/** Personal tab header (B3:B6) */
+export function personal(tasks, owner, ym) {
+  const mine = tasks.filter((t) => t.owner === owner)
+  return {
+    mine,
+    open: mine.filter(isOpen).length,
+    doneMonth: mine.filter((t) => isDone(t) && inMonth(t.completed, ym)).length,
+    estOpen: sum(mine.filter(isOpen), (t) => t.est),
+    realMonth: sum(mine, (t) => loggedIn(t, ym)),
+  }
+}
+
+/** What someone mostly works on: their top one or two pillars by task count. */
+export function focusOf(tasks, owner) {
+  const n = {}
+  tasks.forEach((t) => t.owner === owner && t.pillar && (n[t.pillar] = (n[t.pillar] || 0) + 1))
+  const top = Object.entries(n)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .map(([k]) => k)
+  return top.length ? top.join(' & ') : 'No tasks yet'
+}
+
+/** Overview → BY PERSON */
+export function byPerson(tasks, ym) {
+  return TEAM.map((p) => {
+    const mine = tasks.filter((t) => t.owner === p.name)
+    const done = mine.filter(isDone)
+    const both = done.filter((t) => t.est > 0 && t.real != null)
+    const estB = sum(both, (t) => t.est)
+    const realB = sum(both, (t) => t.real)
+    return {
+      ...p,
+      role: focusOf(tasks, p.name),
+      planned: mine.length,
+      completed: done.length,
+      inProgress: mine.filter((t) => t.status === 'In progress').length,
+      notStarted: mine.filter((t) => t.status === 'Not started').length,
+      blocked: mine.filter((t) => t.status === 'Blocked').length,
+      plannedSP: sum(mine, (t) => t.est),
+      completedSP: sum(done, (t) => t.est),
+      hours: sum(mine, (t) => loggedIn(t, ym)),
+      /* real ÷ estimate on tasks that have both; 1 = spot on, >1 = ran over */
+      accuracy: estB ? realB / estB : null,
+    }
+  })
+}
+
+/** Overview → BY PILLAR */
+export function byPillar(tasks) {
+  return PILLARS.map((p) => {
+    const list = tasks.filter((t) => t.pillar === p.name)
+    return {
+      ...p,
+      tasks: list,
+      planned: list.length,
+      completed: list.filter(isDone).length,
+      inProgress: list.filter((t) => t.status === 'In progress').length,
+      notStarted: list.filter((t) => t.status === 'Not started').length,
+      blocked: list.filter((t) => t.status === 'Blocked').length,
+      open: list.filter(isOpen).length,
+      plannedSP: sum(list, (t) => t.est),
+      realSP: sum(list, (t) => t.real),
+      owners: [...new Set(list.map((t) => t.owner))],
+    }
+  })
+}
+
+/** Overview → BY WORKSTREAM, for one pillar. Tasks without a workstream are left out, as on the sheet. */
+export function byWorkstream(tasks, pillar) {
+  const list = tasks.filter((t) => t.pillar === pillar && t.workstream)
+  const names = [...new Set([...WORKSTREAMS.filter((w) => w.pillar === pillar).map((w) => w.name), ...list.map((t) => t.workstream)])]
+  return names
+    .map((name) => {
+      const ws = list.filter((t) => t.workstream === name)
+      return {
+        name,
+        planned: ws.length,
+        completed: ws.filter(isDone).length,
+        open: ws.filter(isOpen).length,
+        plannedSP: sum(ws, (t) => t.est),
+      }
+    })
+    .filter((w) => w.planned > 0)
+    .sort((a, b) => b.planned - a.planned)
+}
+
+/** Overview → DAILY HOURS TRACKER: owner × day of month */
+export function dailyHours(tasks, ym, owner) {
+  const days = daysInMonth(ym)
+  const out = Array.from({ length: days }, () => 0)
+  tasks.forEach((t) => {
+    if (owner && t.owner !== owner) return
+    const h = loggedIn(t, ym)
+    if (h) out[Number(t.completed.slice(8, 10)) - 1] += h
+  })
+  return out
+}
+
+/** Tasks marked Done per day of the month */
+export function dailyDone(tasks, ym, owner) {
+  const out = Array.from({ length: daysInMonth(ym) }, () => 0)
+  tasks.forEach((t) => {
+    if (owner && t.owner !== owner) return
+    if (isDone(t) && inMonth(t.completed, ym)) out[Number(t.completed.slice(8, 10)) - 1] += 1
+  })
+  return out
+}
+
+/** Estimated hours of still-open work due on each day of the month */
+export function dailyDueOpen(tasks, ym) {
+  const out = Array.from({ length: daysInMonth(ym) }, () => 0)
+  tasks.forEach((t) => {
+    if (isOpen(t) && inMonth(t.due, ym)) out[Number(t.due.slice(8, 10)) - 1] += t.est || 0
+  })
+  return out
+}
+
+/** Which bucket an open task's due date falls in */
+export function dueBucket(t, today = todayISO()) {
+  if (isDone(t)) return 'Done'
+  if (!t.due) return 'No date'
+  const n = diffDays(t.due, today)
+  if (n < 0) return 'Overdue'
+  if (n === 0) return 'Today'
+  if (t.due <= addDays(today, 7)) return 'This week'
+  return 'Later'
+}
+export const BUCKETS = ['Overdue', 'Today', 'This week', 'Later', 'No date', 'Done']
+
+/** Rows that break the sheet's own rules, so hours or totals come out wrong */
+export const HYGIENE = [
+  { id: 'noReal', label: 'Done without Real Story Points', hint: 'Hours not counted on the Overview', test: (t) => isDone(t) && t.real == null },
+  { id: 'noCompleted', label: 'Done without a Completed Date', hint: 'Hours can’t be credited to a day', test: (t) => isDone(t) && !t.completed },
+  { id: 'noEst', label: 'No Est. Story Points', hint: 'Missing from planned hours', test: (t) => t.est == null },
+  { id: 'noWorkstream', label: 'No Workstream picked', hint: 'Left out of By Workstream', test: (t) => !t.workstream },
+  { id: 'noDue', label: 'Open with no Due Date', hint: 'Can’t be scheduled', test: (t) => isOpen(t) && !t.due },
+]
