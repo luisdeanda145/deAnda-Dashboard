@@ -77,13 +77,6 @@ export default function Settings() {
           </h2>
           <Slider label="Curvature" hint="How far the side panels wrap around you. You can also drag the window bar." value={settings.curve} min={0} max={28} unit="°" onChange={(curve) => set({ curve })} />
           <Slider label="Depth" hint="Lower is closer, with a stronger 3D effect." value={settings.depth} min={900} max={3200} step={50} unit="px" onChange={(depth) => set({ depth })} />
-          <div className="set-row">
-            <div>
-              <b>Head tracking</b>
-              <small>The view shifts gently as you move the pointer</small>
-            </div>
-            <Switch on={settings.parallax} onChange={(parallax) => set({ parallax })} label="Head tracking" />
-          </div>
         </section>
 
         <section className="card set-group rise" style={{ '--d': 3 }}>

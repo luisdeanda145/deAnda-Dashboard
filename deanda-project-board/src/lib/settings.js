@@ -2,8 +2,7 @@
 export const DEFAULTS = {
   curve: 16,
   depth: 1700,
-  frost: 34,
-  tint: 34,
-  parallax: true,
+  frost: 44,
+  tint: 58,
   motion: true,
 }

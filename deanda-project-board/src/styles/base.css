@@ -8,9 +8,9 @@
   --serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
 
   --ink: #ffffff;
-  --ink-2: rgba(255, 255, 255, 0.86);
-  --muted: rgba(255, 255, 255, 0.64);
-  --faint: rgba(255, 255, 255, 0.44);
+  --ink-2: rgba(255, 255, 255, 0.93);
+  --muted: rgba(255, 255, 255, 0.76);
+  --faint: rgba(255, 255, 255, 0.58);
   --line: rgba(255, 255, 255, 0.12);
 
   /* surfaces layered on top of a window's glass */
@@ -30,11 +30,11 @@
   --hatch: repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.5) 0 1.3px, transparent 1.3px 5.5px);
 
   /* glass — tint and frost are driven from Settings */
-  --tint: 0.3;
+  --tint: 0.58;
   --glass-rgb: 54 48 42;
   --glass-deep: 40 35 30;
-  --frost: 34px;
-  --glass-filter: blur(var(--frost)) saturate(1.7) brightness(0.84);
+  --frost: 44px;
+  --glass-filter: blur(var(--frost)) saturate(1.25) brightness(0.62);
   --rim:
     inset 0 1px 0.5px rgba(255, 255, 255, 0.5), inset 1px 0 0.5px rgba(255, 255, 255, 0.2),
     inset -1px 0 0.5px rgba(255, 255, 255, 0.1), inset 0 -1px 0.5px rgba(255, 255, 255, 0.1);
@@ -305,7 +305,7 @@ img {
   min-width: 168px;
   padding: 6px;
   border-radius: 20px;
-  background: rgba(70, 63, 56, 0.5);
+  background: rgba(44, 39, 34, 0.94);
   backdrop-filter: blur(28px) saturate(1.8);
   -webkit-backdrop-filter: blur(28px) saturate(1.8);
   box-shadow:

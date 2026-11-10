@@ -42,10 +42,9 @@ const VIEWS = {
 const CANVAS = { w: 1780, h: 910 }
 const SPATIAL_MIN = 1100
 
-
 function loadSettings() {
   try {
-    return { ...DEFAULTS, ...JSON.parse(localStorage.getItem('dac-board-space') || '{}') }
+    return { ...DEFAULTS, ...JSON.parse(localStorage.getItem('dac-board-space-v2') || '{}') }
   } catch {
     return DEFAULTS
   }
@@ -115,7 +114,7 @@ export default function App() {
   const openTask = useCallback((task) => setSheet({ task: task || {} }), [])
 
   useEffect(() => {
-    localStorage.setItem('dac-board-space', JSON.stringify(settings))
+    localStorage.setItem('dac-board-space-v2', JSON.stringify(settings))
     const root = document.documentElement
     root.dataset.motion = settings.motion ? 'on' : 'off'
     root.style.setProperty('--curve', `${settings.curve}deg`)
@@ -155,48 +154,6 @@ export default function App() {
     addEventListener('resize', fit)
     return () => removeEventListener('resize', fit)
   }, [])
-
-  /* head-tracking: the pointer moves the vantage point */
-  useEffect(() => {
-    const el = stage.current
-    if (!el) return
-    const paint = (x, y) => {
-      const space = el.querySelector('.space')
-      const env = el.querySelector('.env')
-      if (space) space.style.perspectiveOrigin = `${50 + x * 10}% ${42 + y * 8}%`
-      if (env) env.style.translate = `${x * 16}px ${y * 10}px`
-    }
-    if (!settings.parallax || !settings.motion || !spatial) {
-      paint(0, 0)
-      return
-    }
-    const target = { x: 0, y: 0 }
-    const now = { x: 0, y: 0 }
-    let raf = 0
-    const step = () => {
-      now.x += (target.x - now.x) * 0.06
-      now.y += (target.y - now.y) * 0.06
-      paint(now.x, now.y)
-      raf = Math.abs(target.x - now.x) + Math.abs(target.y - now.y) > 0.001 ? requestAnimationFrame(step) : 0
-    }
-    const move = (e) => {
-      target.x = (e.clientX / innerWidth) * 2 - 1
-      target.y = (e.clientY / innerHeight) * 2 - 1
-      if (!raf) raf = requestAnimationFrame(step)
-    }
-    const leave = () => {
-      target.x = 0
-      target.y = 0
-      if (!raf) raf = requestAnimationFrame(step)
-    }
-    addEventListener('pointermove', move)
-    document.documentElement.addEventListener('pointerleave', leave)
-    return () => {
-      removeEventListener('pointermove', move)
-      document.documentElement.removeEventListener('pointerleave', leave)
-      cancelAnimationFrame(raf)
-    }
-  }, [settings.parallax, settings.motion, spatial])
 
   /* gaze highlight */
   useEffect(() => {
