@@ -52,7 +52,7 @@ export default function Sidebar() {
     <nav className="win side" aria-label="Main">
       <div className="ws">
         <span className="ws-logo" aria-hidden="true">
-          dA
+          <img src="/logo.webp" alt="" />
         </span>
         <div>
           <strong>{WORKSPACE.name}</strong>
