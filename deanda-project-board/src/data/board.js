@@ -19,8 +19,16 @@ export const WORKSPACE = {
 /** The month the board reports on (the Overview's "Month" cell). */
 export const BOARD_MONTH = '2026-11'
 
-/** Team, column A of Lists (up to 10 names). */
-export const TEAM = [{ name: 'Grace' }, { name: 'Hamza' }, { name: 'Brayden' }, { name: 'Jackson' }, { name: 'Isabel' }, { name: 'Luis' }, { name: 'Kelvin' }]
+/* ------------------------------------------------------------
+   Team, pillars and workstreams can be edited from the app
+   (Settings, Team, Pillars). The lists below are the defaults;
+   the live lists are the `let` bindings further down, which
+   applyDirectory() swaps for the edited ones. ES module
+   bindings are live, so every importer sees the new lists.
+   ------------------------------------------------------------ */
+
+/** Team, column A of Lists. */
+export const DEFAULT_TEAM = [{ name: 'Grace' }, { name: 'Hamza' }, { name: 'Brayden' }, { name: 'Jackson' }, { name: 'Isabel' }, { name: 'Luis' }, { name: 'Kelvin' }]
 
 /** Status column. Anything without a status counts as open. */
 export const STATUSES = [
@@ -39,7 +47,7 @@ export const PRIORITIES = [
 ]
 
 /** Pillar tabs (column C) plus the to-do-only pillars (column E). */
-export const PILLARS = [
+export const DEFAULT_PILLARS = [
   { name: 'de Anda LABs', code: 'LB', tone: 'violet', blurb: 'de Anda Capital, Doorcount and Farm Program websites' },
   { name: 'PMC', code: 'PM', tone: 'blue', blurb: 'Marathon Management, Rainey Realty, Asset Management' },
   { name: 'PMC DOF', code: 'PD', tone: 'sky', blurb: 'GTM General, LinkedIn, SEO, Blogs, Cold call, Emails' },
@@ -53,11 +61,10 @@ export const PILLARS = [
 ]
 /** These stay on a person's tab only, so they never appear on a pillar tab. */
 export const TODO_ONLY_PILLARS = ['Personal / Admin', 'Bronx Future Stars', 'Other']
-export const ALL_PILLARS = [...PILLARS.map((p) => p.name), ...TODO_ONLY_PILLARS]
 export const pillarTone = (name) => PILLARS.find((p) => p.name === name)?.tone || 'mute'
 
 /** Workstream → pillar it files under (columns K–L of Lists). */
-export const WORKSTREAMS = [
+export const DEFAULT_WORKSTREAMS = [
   ['de Anda Capital Website', 'de Anda LABs'],
   ['Doorcount Website', 'de Anda LABs'],
   ['Farm Program Website', 'de Anda LABs'],
@@ -88,6 +95,23 @@ export const WORKSTREAMS = [
   ['Team meetings', 'dAC Internal'],
   ['Accounting', 'Accounting'],
 ].map(([name, pillar]) => ({ name, pillar }))
+
+/** Colours a pillar can take. */
+export const TONES = ['violet', 'blue', 'sky', 'teal', 'green', 'pink', 'amber', 'orange', 'red', 'ink', 'mute']
+
+/* the live lists */
+export let TEAM = DEFAULT_TEAM
+export let PILLARS = DEFAULT_PILLARS
+export let WORKSTREAMS = DEFAULT_WORKSTREAMS
+export let ALL_PILLARS = [...PILLARS.map((p) => p.name), ...TODO_ONLY_PILLARS]
+
+/** Point the live lists at an edited directory ({ team, pillars, workstreams }). */
+export function applyDirectory(dir) {
+  TEAM = dir.team
+  PILLARS = dir.pillars
+  WORKSTREAMS = dir.workstreams
+  ALL_PILLARS = [...PILLARS.map((p) => p.name), ...TODO_ONLY_PILLARS]
+}
 
 /** "Other" and "Payroll" belong to more than one pillar. */
 export const SHARED_WORKSTREAMS = ['Payroll', 'Other']

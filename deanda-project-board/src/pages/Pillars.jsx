@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Icon from '../components/Icon'
 import { CardHead, Faces, PageHead, Segmented } from '../components/ui'
+import { WORKSTREAMS } from '../data/board'
 import { hrs } from '../lib/format'
 import { byPillar, byWorkstream, isOpen } from '../lib/selectors'
 import { useApp } from '../lib/store'
@@ -10,12 +11,12 @@ const SORTS = ['Open', 'Hours', 'A–Z']
 
 /** One tab per pillar, as on the sheet: progress, workstreams and the open work. */
 export default function Pillars() {
-  const { tasks, openTask } = useApp()
+  const { tasks, openTask, manage } = useApp()
   const [sort, setSort] = useState('Open')
   const all = byPillar(tasks)
   const list = [...all].sort((a, b) => (sort === 'Open' ? b.open - a.open : sort === 'Hours' ? b.plannedSP - a.plannedSP : a.name.localeCompare(b.name)))
   const [pick, setPick] = useState(() => [...all].sort((a, b) => b.open - a.open)[0].name)
-  const p = all.find((x) => x.name === pick)
+  const p = all.find((x) => x.name === pick) || all[0] // the picked pillar may have been removed
   const ws = byWorkstream(tasks, p.name)
   const wsMax = Math.max(1, ...ws.map((w) => w.planned))
   const open = p.tasks.filter(isOpen).sort((a, b) => (a.priority || 'P9').localeCompare(b.priority || 'P9') || (a.due || '9').localeCompare(b.due || '9'))
@@ -25,6 +26,9 @@ export default function Pillars() {
     <>
       <PageHead title="Pillars" sub="Every pillar tab on the board, with its workstreams">
         <Segmented value={sort} options={SORTS} onChange={setSort} />
+        <button type="button" className="cta" onClick={() => manage('pillar')}>
+          <Icon name="plus" size={16} stroke={2.2} /> Add pillar
+        </button>
       </PageHead>
 
       <div className="pillars">
@@ -96,8 +100,16 @@ export default function Pillars() {
           </article>
 
           <article className="card rise" style={{ '--d': 3 }}>
-            <CardHead title="By Workstream" />
+            <CardHead title="By Workstream">
+              <button type="button" className="chip sm-chip" onClick={() => manage('workstream', { pillar: p.name })}>
+                <Icon name="plus" size={14} stroke={2.2} /> Add workstream
+              </button>
+            </CardHead>
             {ws.length === 0 && <p className="muted-line">No workstreams with tasks yet.</p>}
+            {(() => {
+              const idle = WORKSTREAMS.filter((w) => w.pillar === p.name && !ws.some((x) => x.name === w.name))
+              return idle.length > 0 && <p className="ws-idle">No tasks yet: {idle.map((w) => w.name).join(', ')}</p>
+            })()}
             <ul className="ws-bars">
               {ws.map((w, i) => (
                 <li key={w.name} style={{ '--i': i }}>

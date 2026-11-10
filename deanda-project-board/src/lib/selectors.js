@@ -70,7 +70,7 @@ export function byPerson(tasks, ym) {
     const realB = sum(both, (t) => t.real)
     return {
       ...p,
-      role: focusOf(tasks, p.name),
+      role: p.role || focusOf(tasks, p.name),
       planned: mine.length,
       completed: done.length,
       inProgress: mine.filter((t) => t.status === 'In progress').length,
@@ -175,3 +175,61 @@ export const HYGIENE = [
   { id: 'noWorkstream', label: 'No Workstream picked', hint: 'Left out of By Workstream', test: (t) => !t.workstream },
   { id: 'noDue', label: 'Open with no Due Date', hint: 'Can’t be scheduled', test: (t) => isOpen(t) && !t.due },
 ]
+
+/* ============================================================
+   Month over month. Everything here is credited to a month by
+   date: work done by its Completed Date, planned work by its
+   Due Date. Months without tasks simply come out as zeros.
+   ============================================================ */
+
+/** "2026-11" shifted by n months: shiftMonth('2026-01', -1) → '2025-12' */
+export function shiftMonth(ym, n) {
+  const [y, m] = ym.split('-').map(Number)
+  const d = new Date(y, m - 1 + n, 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+/** One month's numbers, for comparing with another month. */
+export function monthStats(tasks, ym) {
+  const done = tasks.filter((t) => isDone(t) && inMonth(t.completed, ym))
+  const due = tasks.filter((t) => inMonth(t.due, ym))
+  const dueDone = due.filter((t) => isDone(t) && t.completed)
+  const both = done.filter((t) => t.est > 0 && t.real != null)
+  const estB = sum(both, (t) => t.est)
+  const hoursBy = (key) => {
+    const out = {}
+    done.forEach((t) => t[key] && (out[t[key]] = (out[t[key]] || 0) + (t.real || 0)))
+    return out
+  }
+  const doneBy = (key) => {
+    const out = {}
+    done.forEach((t) => t[key] && (out[t[key]] = (out[t[key]] || 0) + 1))
+    return out
+  }
+  return {
+    ym,
+    done: done.length,
+    hours: sum(done, (t) => t.real),
+    estDone: sum(done, (t) => t.est),
+    accuracy: estB ? sum(both, (t) => t.real) / estB : null,
+    due: due.length,
+    dueHours: sum(due, (t) => t.est),
+    onTime: dueDone.length ? (dueDone.filter((t) => t.completed <= t.due).length / dueDone.length) * 100 : null,
+    people: new Set(done.map((t) => t.owner)).size,
+    hoursByPerson: hoursBy('owner'),
+    doneByPerson: doneBy('owner'),
+    hoursByPillar: hoursBy('pillar'),
+    doneByPillar: doneBy('pillar'),
+    empty: done.length === 0 && due.length === 0,
+  }
+}
+
+/** Months that have any dated work, newest first. */
+export function monthsWithData(tasks) {
+  const set = new Set()
+  tasks.forEach((t) => {
+    if (t.completed) set.add(t.completed.slice(0, 7))
+    if (t.due) set.add(t.due.slice(0, 7))
+  })
+  return [...set].sort().reverse()
+}

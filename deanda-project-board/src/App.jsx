@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AppContext } from './lib/store'
-import { BOARD_MONTH, USER } from './data/board'
+import { BOARD_MONTH, USER, applyDirectory } from './data/board'
+import { codeFor, loadDirectory, same, saveDirectory } from './lib/directory'
 import * as api from './lib/api'
 import { todayISO } from './lib/format'
 import { DEFAULTS } from './lib/settings'
@@ -23,6 +24,8 @@ import Team from './pages/Team'
 import Hours from './pages/Hours'
 import Insights from './pages/Insights'
 import Settings from './pages/Settings'
+import Compare from './pages/Compare'
+import ManageSheet from './components/ManageSheet'
 import Guide from './pages/Guide'
 
 const VIEWS = {
@@ -34,6 +37,7 @@ const VIEWS = {
   team: Team,
   hours: Hours,
   insights: Insights,
+  compare: Compare,
   settings: Settings,
   guide: Guide,
 }
@@ -71,6 +75,75 @@ export default function App() {
   const [month, setMonth] = useState(BOARD_MONTH)
   const [me, setMe] = useState(USER.name) // whose tab My Work shows
   const [preset, setPreset] = useState(null) // a filter handed to All Tasks
+
+  /* ---------------- team, pillars, workstreams ---------------- */
+  const [dir, setDir] = useState(loadDirectory)
+  applyDirectory(dir) // before any child renders, so they all read the edited lists
+  useEffect(() => saveDirectory(dir), [dir])
+
+  /* each returns an error message, or null when the change was made */
+  const addPerson = useCallback(
+    ({ name, role }) => {
+      name = name.trim()
+      if (!name) return 'Give them a name'
+      const dup = dir.team.find((p) => same(p.name, name))
+      if (dup) return `${dup.name} is already on the team`
+      setDir((d) => ({ ...d, team: [...d.team, { name, ...(role?.trim() ? { role: role.trim() } : {}) }] }))
+      return null
+    },
+    [dir],
+  )
+  const removePerson = useCallback(
+    (name) => {
+      const n = tasks.filter((t) => t.owner === name).length
+      if (n) return `${name} still owns ${n} task${n === 1 ? '' : 's'}. Reassign them first.`
+      if (name === USER.name) return 'You can’t remove yourself'
+      setDir((d) => ({ ...d, team: d.team.filter((p) => p.name !== name) }))
+      return null
+    },
+    [tasks],
+  )
+  const addPillar = useCallback(
+    ({ name, tone, blurb }) => {
+      name = name.trim()
+      if (!name) return 'Give the pillar a name'
+      const dup = dir.pillars.find((p) => same(p.name, name))
+      if (dup) return `There is already a ${dup.name} pillar`
+      setDir((d) => ({ ...d, pillars: [...d.pillars, { name, code: codeFor(name), tone: tone || 'blue', blurb: blurb?.trim() || '' }] }))
+      return null
+    },
+    [dir],
+  )
+  const removePillar = useCallback(
+    (name) => {
+      const n = tasks.filter((t) => t.pillar === name).length
+      if (n) return `${n} task${n === 1 ? ' is' : 's are'} filed under ${name}. Move them first.`
+      if (dir.pillars.length === 1) return 'The board needs at least one pillar'
+      setDir((d) => ({ ...d, pillars: d.pillars.filter((p) => p.name !== name), workstreams: d.workstreams.filter((w) => w.pillar !== name) }))
+      return null
+    },
+    [tasks, dir],
+  )
+  const addWorkstream = useCallback(
+    ({ name, pillar }) => {
+      name = name.trim()
+      if (!name) return 'Give the workstream a name'
+      if (!pillar) return 'Pick the pillar it files under'
+      if (dir.workstreams.some((w) => w.pillar === pillar && same(w.name, name))) return `${pillar} already has ${name}`
+      setDir((d) => ({ ...d, workstreams: [...d.workstreams, { name, pillar }] }))
+      return null
+    },
+    [dir],
+  )
+  const removeWorkstream = useCallback(
+    ({ name, pillar }) => {
+      const n = tasks.filter((t) => t.pillar === pillar && t.workstream === name).length
+      if (n) return `${n} task${n === 1 ? ' uses' : 's use'} ${name}. Move them first.`
+      setDir((d) => ({ ...d, workstreams: d.workstreams.filter((w) => !(w.name === name && w.pillar === pillar)) }))
+      return null
+    },
+    [tasks],
+  )
 
   const set = useCallback((patch) => setSettings((s) => ({ ...s, ...patch })), [])
 
@@ -216,8 +289,16 @@ export default function App() {
       setMe,
       preset,
       setPreset,
+      dir,
+      addPerson,
+      removePerson,
+      addPillar,
+      removePillar,
+      addWorkstream,
+      removeWorkstream,
+      manage: (what, extra) => setSheet({ manage: what, ...extra }),
     }),
-    [page, go, settings, set, toast, spatial, side, right, tasks, addTask, patchTask, removeTask, toggleDone, openTask, month, me, preset],
+    [page, go, settings, set, toast, spatial, side, right, tasks, addTask, patchTask, removeTask, toggleDone, openTask, month, me, preset, dir, addPerson, removePerson, addPillar, removePillar, addWorkstream, removeWorkstream],
   )
 
   const View = VIEWS[page]
@@ -248,6 +329,7 @@ export default function App() {
         </div>
 
         {sheet === 'palette' && <Palette onClose={() => setSheet(null)} />}
+        {sheet?.manage && <ManageSheet what={sheet.manage} pillar={sheet.pillar} onClose={() => setSheet(null)} />}
         {sheet?.task && <TaskSheet key={sheet.task.id || 'new'} task={sheet.task} hint={sheet.hint} onClose={() => setSheet(null)} />}
         <Toasts items={toasts} />
       </main>

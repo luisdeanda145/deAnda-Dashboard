@@ -13,7 +13,7 @@ function accuracyLabel(a) {
 
 /** Overview → BY PERSON, as a card per teammate plus the full table. */
 export default function Team() {
-  const { tasks, month, setMe, go } = useApp()
+  const { tasks, month, setMe, go, manage } = useApp()
   const people = byPerson(tasks, month)
   const maxH = Math.max(1, ...people.map((p) => p.hours))
   const view = (name) => {
@@ -23,7 +23,11 @@ export default function Team() {
 
   return (
     <>
-      <PageHead title="Team" sub={`${people.length} people · hours credited in ${fmtMonth(month)}`} />
+      <PageHead title="Team" sub={`${people.length} people · hours credited in ${fmtMonth(month)}`}>
+        <button type="button" className="cta" onClick={() => manage('person')}>
+          <Icon name="plus" size={16} stroke={2.2} /> Add member
+        </button>
+      </PageHead>
 
       <div className="team-grid">
         {people.map((p, i) => {

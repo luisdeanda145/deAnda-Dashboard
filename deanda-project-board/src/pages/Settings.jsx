@@ -24,7 +24,9 @@ function Slider({ label, hint, value, min, max, step = 1, unit = '', onChange })
 }
 
 export default function Settings() {
-  const { settings, set, toast, month, setMonth, tasks } = useApp()
+  const { settings, set, toast, month, setMonth, tasks, manage, removePerson, removePillar, removeWorkstream } = useApp()
+  /* removals refuse while tasks still point at the thing; say why */
+  const attempt = (problem, done) => toast(problem ? { icon: 'alert', title: 'Can’t remove yet', text: problem } : { icon: 'trash', title: 'Removed', text: done })
 
   return (
     <>
@@ -97,6 +99,9 @@ export default function Settings() {
         <section className="card set-group rise" style={{ '--d': 4 }}>
           <h2>
             <Icon name="users" size={18} /> Team
+            <button type="button" className="chip sm-chip set-add" onClick={() => manage('person')}>
+              <Icon name="plus" size={14} stroke={2.2} /> Add member
+            </button>
           </h2>
           <ul className="roster">
             {TEAM.map((p) => (
@@ -107,8 +112,13 @@ export default function Settings() {
                     {p.name}
                     {p.name === USER.name && <em> · you</em>}
                   </b>
-                  <small>{focusOf(tasks, p.name)}</small>
+                  <small>{p.role || focusOf(tasks, p.name)}</small>
                 </div>
+                {p.name !== USER.name && (
+                  <button type="button" className="x-btn" aria-label={`Remove ${p.name}`} data-tip="Remove" onClick={() => attempt(removePerson(p.name), p.name)}>
+                    <Icon name="close" size={13} stroke={2.2} />
+                  </button>
+                )}
               </li>
             ))}
           </ul>
@@ -117,17 +127,31 @@ export default function Settings() {
         <section className="card set-group wide rise" style={{ '--d': 5 }}>
           <h2>
             <Icon name="layers" size={18} /> Pillars & workstreams
+            <button type="button" className="chip sm-chip set-add" onClick={() => manage('pillar')}>
+              <Icon name="plus" size={14} stroke={2.2} /> Add pillar
+            </button>
           </h2>
           <div className="pw-grid">
             {PILLARS.map((p) => (
               <div key={p.name}>
                 <b>
                   <i className={`dot ${p.tone}`} /> {p.name}
+                  <button type="button" className="x-btn" aria-label={`Remove ${p.name}`} data-tip="Remove pillar" onClick={() => attempt(removePillar(p.name), p.name)}>
+                    <Icon name="close" size={13} stroke={2.2} />
+                  </button>
                 </b>
                 <span className="tags">
                   {WORKSTREAMS.filter((w) => w.pillar === p.name).map((w) => (
-                    <i key={w.name}>{w.name}</i>
+                    <i key={w.name} className="tag-x">
+                      {w.name}
+                      <button type="button" aria-label={`Remove ${w.name}`} onClick={() => attempt(removeWorkstream(w), w.name)}>
+                        <Icon name="close" size={11} stroke={2.4} />
+                      </button>
+                    </i>
                   ))}
+                  <button type="button" className="tag-add" onClick={() => manage('workstream', { pillar: p.name })}>
+                    <Icon name="plus" size={12} stroke={2.4} /> Workstream
+                  </button>
                 </span>
               </div>
             ))}

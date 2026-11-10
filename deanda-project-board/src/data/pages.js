@@ -8,6 +8,7 @@ export const PAGES = [
   { id: 'team', label: 'Team', icon: 'users' },
   { id: 'hours', label: 'Hours', icon: 'clock' },
   { id: 'insights', label: 'Insights', icon: 'chart' },
+  { id: 'compare', label: 'Compare', icon: 'calendar' },
   { id: 'settings', label: 'Settings', icon: 'sliders', low: true },
   { id: 'guide', label: 'How It Works', icon: 'help', low: true },
 ]

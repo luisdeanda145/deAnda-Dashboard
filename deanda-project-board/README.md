@@ -23,9 +23,12 @@ npm run build    # production build into dist/
 | **Pillars** | Each pillar tab, its By Workstream breakdown and open work |
 | **Team** | By Person: hours, completion, blocked, and how real hours compare with estimates |
 | **Hours** | Daily Hours Tracker as a heat map, plus hours by pillar |
+| **Compare** | Month over month: pick any two months and compare hours logged, tasks completed and due, on-time rate, and the By Person / By Pillar breakdowns, plus a six-month hours trend. Work is credited by Completed Date and Due Date, so earlier months fill in as the board accumulates history. |
 | **Insights** | Estimate vs actual, due-date health, priority mix, and data hygiene (rows the sheet's formulas can't count) |
-| **Settings** | Reporting month, team, pillars and workstreams, glass and spatial controls |
+| **Settings** | Reporting month; add or remove team members, pillars and workstreams; glass and spatial controls |
 | **How It Works** | The sheet's rules for the team |
+
+Add team members from **Team** or **Settings**, and pillars and workstreams from **Pillars** or **Settings**. A person, pillar or workstream can only be removed once no task points at it. These edits are saved in the browser (`src/lib/directory.js`) until the backend is connected.
 
 Click any task anywhere to edit every column of its row. `N` adds a task, `⌘K` searches tasks, people and pillars.
 
@@ -36,7 +39,8 @@ All reads and writes go through **`src/lib/api.js`** (`fetchTasks`, `createTask`
 | What | Where |
 | --- | --- |
 | Signed-in user | `USER` in `src/data/board.js` |
-| Team, statuses, priorities, pillars, workstreams (the Lists tab) | `src/data/board.js` |
+| Default team, statuses, priorities, pillars, workstreams (the Lists tab) | `src/data/board.js` |
+| Team, pillars and workstreams as edited in the app | `src/lib/directory.js` (localStorage today) |
 | Reporting month | `BOARD_MONTH` in `src/data/board.js` (also changeable in Settings) |
 | The sheet's formulas (summary, by person, by pillar, by workstream, daily hours) | `src/lib/selectors.js` |
 | Imported tasks (538 rows from the personal tabs) | `src/data/tasks.json` |
