@@ -4,5 +4,6 @@ export const DEFAULTS = {
   depth: 1700,
   frost: 44,
   tint: 58,
+  bgBlur: 2, // px of blur on the room photo behind the windows
   motion: true,
 }

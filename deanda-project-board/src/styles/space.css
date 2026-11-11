@@ -23,6 +23,9 @@
   position: absolute;
   inset: 0;
   background: url('/background.jpg') center / cover no-repeat;
+  /* Settings → Background blur; the photo never moves, so the blur is drawn once */
+  filter: blur(var(--bg-blur, 2px));
+  transition: filter 0.3s;
 }
 .env-veil {
   position: absolute;

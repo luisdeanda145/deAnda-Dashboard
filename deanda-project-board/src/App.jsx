@@ -262,6 +262,7 @@ export default function App() {
     root.style.setProperty('--depth', `${settings.depth}px`)
     root.style.setProperty('--frost', `${settings.frost}px`)
     root.style.setProperty('--tint', settings.tint / 100)
+    root.style.setProperty('--bg-blur', `${settings.bgBlur}px`)
   }, [settings])
 
   const toTop = () => {

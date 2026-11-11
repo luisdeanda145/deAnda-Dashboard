@@ -96,8 +96,9 @@ export default function Settings() {
           <h2>
             <Icon name="sparkle" size={18} /> Glass & motion
           </h2>
-          <Slider label="Frost" hint="Background blur behind every window." value={settings.frost} min={6} max={70} unit="px" onChange={(frost) => set({ frost })} />
+          <Slider label="Frost" hint="How frosted the glass of every window is." value={settings.frost} min={6} max={70} unit="px" onChange={(frost) => set({ frost })} />
           <Slider label="Tint" hint="Darker glass keeps text legible on bright scenes." value={settings.tint} min={0} max={70} unit="%" onChange={(tint) => set({ tint })} />
+          <Slider label="Background blur" hint="Softens the room photo behind the windows. 0 is sharp." value={settings.bgBlur} min={0} max={16} unit="px" onChange={(bgBlur) => set({ bgBlur })} />
           <div className="set-row">
             <div>
               <b>Animations</b>
