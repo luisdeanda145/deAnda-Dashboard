@@ -659,18 +659,16 @@
   color: var(--ink-2);
 }
 
-/* the light-blue tide card
-   A pale sky-blue gradient with a soft glow from above, three layers of
-   waves rolling across the lower half at different speeds and depths,
-   and a few bubbles rising through them. Each wave is one SVG tile drawn
-   twice side by side and slid by exactly one tile, so the loop is
-   seamless. Everything moves with transform and opacity only, so the
-   page never repaints for it: the GPU just slides the layers. */
+/* the light-blue sky card
+   A pale sky gradient with three pools of light that wander and breathe
+   on out-of-step loops (12s, 15s, 18s), plus a sheen that crosses every
+   7s. Every layer is a plain gradient moved with transform
+   and opacity only, so it never repaints: the GPU just slides it. */
 .contacts {
   flex-shrink: 0;
 }
 .contacts::before {
-  background: linear-gradient(175deg, rgb(150 210 255 / 0.9) 0%, rgb(96 168 248 / 0.9) 45%, rgb(52 120 226 / 0.94) 100%);
+  background: linear-gradient(168deg, rgb(132 198 255 / 0.9) 0%, rgb(82 156 244 / 0.9) 50%, rgb(44 108 218 / 0.92) 100%);
   backdrop-filter: blur(var(--frost)) saturate(1.5);
   -webkit-backdrop-filter: blur(var(--frost)) saturate(1.5);
 }
@@ -686,94 +684,77 @@
 .sky i {
   position: absolute;
   display: block;
-  will-change: transform, translate, scale;
-}
-/* light from above */
-.sky-glow {
-  inset: -30% -20% auto;
-  height: 75%;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgb(235 248 255 / 0.55), transparent);
-  animation: glow 9s ease-in-out infinite alternate;
+  will-change: transform;
 }
-/* waves: 200% wide, the same 400×80 tile repeated, slid left by one tile width */
-.wave {
-  left: 0;
-  width: 200%;
-  background-repeat: repeat-x;
-  background-position: 0 0;
-  background-size: 50% 100%;
+/* a bright, almost white pool high on the left */
+.sky-a {
+  width: 120%;
+  height: 90%;
+  left: -40%;
+  top: -42%;
+  background: radial-gradient(closest-side, rgb(240 250 255 / 0.95), rgb(196 230 255 / 0.42) 55%, transparent);
+  animation: skyA 12s ease-in-out infinite;
 }
-.w3 {
-  bottom: 30%;
-  height: 34%;
-  opacity: 0.32;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 80' preserveAspectRatio='none'%3E%3Cpath d='M0 40 C 66 14 134 14 200 40 S 334 66 400 40 V80 H0 Z' fill='%23dff2ff'/%3E%3C/svg%3E");
-  animation: tide 19s linear infinite reverse;
+/* a cyan pool lower right */
+.sky-b {
+  width: 110%;
+  height: 85%;
+  right: -45%;
+  top: 22%;
+  background: radial-gradient(closest-side, rgb(150 244 255 / 0.9), rgb(120 214 255 / 0.36) 60%, transparent);
+  animation: skyB 15s ease-in-out infinite;
 }
-.w2 {
-  bottom: 14%;
-  height: 32%;
-  opacity: 0.3;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 80' preserveAspectRatio='none'%3E%3Cpath d='M0 46 C 50 26 100 26 150 46 S 250 66 300 46 S 375 30 400 46 V80 H0 Z' fill='%23bfe6ff'/%3E%3C/svg%3E");
-  animation: tide 13s linear infinite;
+/* a deeper periwinkle pool along the bottom keeps the white pills legible */
+.sky-c {
+  width: 130%;
+  height: 70%;
+  left: -15%;
+  bottom: -38%;
+  background: radial-gradient(closest-side, rgb(48 76 220 / 0.7), transparent);
+  animation: skyC 18s ease-in-out infinite;
 }
-.w1 {
-  bottom: -2%;
-  transform-origin: bottom;
-  height: 30%;
-  opacity: 0.38;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 80' preserveAspectRatio='none'%3E%3Cpath d='M0 36 C 100 10 100 62 200 36 S 300 10 400 36 V80 H0 Z' fill='%2396d4ff'/%3E%3C/svg%3E");
-  animation:
-    tide 9s linear infinite,
-    swell 4.5s ease-in-out infinite alternate;
+/* a diagonal glint that crosses every 7s */
+.sky-sheen {
+  inset: -20% auto -20% 0;
+  width: 38%;
+  border-radius: 0 !important;
+  background: linear-gradient(100deg, transparent, rgb(255 255 255 / 0.22) 42%, rgb(255 255 255 / 0.42) 50%, rgb(255 255 255 / 0.22) 58%, transparent);
+  transform: translateX(-140%) skewX(-14deg);
+  animation: skySheen 7s ease-in-out 2s infinite;
 }
-/* bubbles rise from below, sway a little and fade near the top */
-.bubble {
-  left: var(--x);
-  bottom: -16px;
-  width: var(--s);
-  height: var(--s);
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.18) 60%, rgb(255 255 255 / 0.05));
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.45);
-  opacity: 0;
-  animation: rise var(--t) ease-in var(--w) infinite;
-}
-/* tide slides, swell lifts: separate properties, so the two animations add up */
-@keyframes tide {
-  to {
-    translate: -50% 0;
+/* each pool wanders a loop rather than sliding back and forth */
+@keyframes skyA {
+  33% {
+    transform: translate(42%, 28%) scale(1.25);
+  }
+  66% {
+    transform: translate(10%, 52%) scale(0.9);
   }
 }
-@keyframes swell {
-  to {
-    scale: 1 1.2;
+@keyframes skyB {
+  33% {
+    transform: translate(-48%, -34%) scale(0.85);
+  }
+  66% {
+    transform: translate(-20%, -58%) scale(1.2);
   }
 }
-@keyframes glow {
-  to {
-    transform: translateX(14%) scale(1.12);
-    opacity: 0.75;
+@keyframes skyC {
+  33% {
+    transform: translate(26%, -22%) scale(1.2);
+  }
+  66% {
+    transform: translate(-18%, -10%) scale(0.92);
   }
 }
-@keyframes rise {
-  0% {
-    transform: translate(0, 0) scale(0.7);
-    opacity: 0;
-  }
-  12% {
-    opacity: 0.9;
-  }
-  50% {
-    transform: translate(10px, -190px) scale(1);
-  }
-  85% {
-    opacity: 0.6;
+@keyframes skySheen {
+  0%,
+  45% {
+    transform: translateX(-140%) skewX(-14deg);
   }
   100% {
-    transform: translate(-6px, -380px) scale(1.1);
-    opacity: 0;
+    transform: translateX(360%) skewX(-14deg);
   }
 }
 @keyframes skyIn {
@@ -781,21 +762,15 @@
     opacity: 0;
   }
 }
-/* with animations off, the tide holds still rather than flickering */
+/* with animations off, the sky holds still rather than flickering */
 [data-motion='off'] .sky,
 [data-motion='off'] .sky i {
   animation: none !important;
-}
-[data-motion='off'] .bubble {
-  display: none;
 }
 @media (prefers-reduced-motion: reduce) {
   .sky,
   .sky i {
     animation: none !important;
-  }
-  .bubble {
-    display: none;
   }
 }
 .contacts .trend {

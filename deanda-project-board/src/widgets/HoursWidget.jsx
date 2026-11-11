@@ -6,18 +6,7 @@ import { useCountUp } from '../lib/hooks'
 import { byPerson, loggedIn } from '../lib/selectors'
 import { useApp } from '../lib/store'
 
-/* left %, size, rise time, start delay: spread out so they never move in step */
-const BUBBLES = [
-  [8, 7, 11, 0],
-  [21, 11, 14, 4],
-  [37, 6, 10, 7],
-  [52, 9, 13, 2],
-  [66, 5, 9, 5.5],
-  [79, 12, 16, 1],
-  [91, 7, 12, 8],
-]
-
-/** The light-blue "tide" card: hours logged this month, one pill per teammate. */
+/** The light-blue "sky" card: hours logged this month, one pill per teammate. */
 export default function HoursWidget() {
   const { tasks, month, go } = useApp()
   const people = byPerson(tasks, month)
@@ -28,16 +17,12 @@ export default function HoursWidget() {
 
   return (
     <section className="win widget contacts hl" style={{ '--n': 0 }}>
-      {/* a light-blue tide: three wave layers rolling at different speeds, bubbles rising
-          through them, a glow from above. Transform-only animation, so it stays on the compositor. */}
+      {/* drifting pools of light; transform-only animation, so it stays on the compositor */}
       <span className="sky" aria-hidden="true">
-        <i className="sky-glow" />
-        <i className="wave w3" />
-        <i className="wave w2" />
-        <i className="wave w1" />
-        {BUBBLES.map((b, i) => (
-          <i key={i} className="bubble" style={{ '--x': `${b[0]}%`, '--s': `${b[1]}px`, '--t': `${b[2]}s`, '--w': `${b[3]}s` }} />
-        ))}
+        <i className="sky-a" />
+        <i className="sky-b" />
+        <i className="sky-c" />
+        <i className="sky-sheen" />
       </span>
       <CardHead title="Hours Logged">
         <button type="button" className="grip-btn" aria-label="Open the daily hours tracker" onClick={() => go('overview')}>
