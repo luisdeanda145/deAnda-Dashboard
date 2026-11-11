@@ -25,7 +25,7 @@ export default function HoursWidget() {
         <i className="sky-sheen" />
       </span>
       <CardHead title="Hours Logged">
-        <button type="button" className="grip-btn" aria-label="Open hours tracker" onClick={() => go('hours')}>
+        <button type="button" className="grip-btn" aria-label="Open the daily hours tracker" onClick={() => go('overview')}>
           <Grip />
         </button>
       </CardHead>

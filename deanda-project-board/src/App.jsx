@@ -15,14 +15,13 @@ import TaskSheet from './components/TaskSheet'
 import Toasts from './components/Toasts'
 import HoursWidget from './widgets/HoursWidget'
 import QueueWidget from './widgets/QueueWidget'
-import VelocityWidget from './widgets/VelocityWidget'
+import HoursByDayWidget from './widgets/HoursByDayWidget'
 import Overview from './pages/Overview'
 import MyWork from './pages/MyWork'
 import Board from './pages/Board'
 import Tasks from './pages/Tasks'
 import Pillars from './pages/Pillars'
 import Team from './pages/Team'
-import Hours from './pages/Hours'
 import Insights from './pages/Insights'
 import Settings from './pages/Settings'
 import ManageSheet from './components/ManageSheet'
@@ -35,7 +34,6 @@ const VIEWS = {
   tasks: Tasks,
   pillars: Pillars,
   team: Team,
-  hours: Hours,
   insights: Insights,
   settings: Settings,
   guide: Guide,
@@ -394,7 +392,7 @@ export default function App() {
           <aside className="facet right" aria-label="Widgets">
             <HoursWidget />
             <QueueWidget />
-            <VelocityWidget />
+            <HoursByDayWidget />
           </aside>
 
           <Grabber />

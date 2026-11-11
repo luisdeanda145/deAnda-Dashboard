@@ -16,13 +16,12 @@ npm run build    # production build into dist/
 
 | Page | What it is in the spreadsheet |
 | --- | --- |
-| **Overview** | Overview tab: team summary, story points done %, open items, status mix, pillar load, daily hours |
+| **Overview** | Overview tab: story points done %, open items, status mix, pillar load (all tasks this month), the Daily Hours Tracker (person × day) and Where The Hours Went (hours by pillar) |
 | **My Work** | A personal tab: Open tasks, Done this month, Story points still open, Hours this month, plus the to-do list by week and by day: open work by Due Date runs forward from today (Today, Overdue most recent first and folded when long, the rest of this week, next week, later weeks, no date); completed work by Completed Date runs back from today (Today, earlier this week, last week, older weeks). Switch person from the pill at the top. |
 | **Board** | Kanban by status. Drag a card to change its status. Dropping on Done stamps today's Completed Date and asks for the hours it took. |
 | **All Tasks** | The ToDo Feed: every row from every tab, sortable, searchable, filterable, exportable to CSV |
 | **Pillars** | Each pillar tab, its By Workstream breakdown and all its tasks in one timeline: Today, Overdue, the weeks ahead, then the weeks behind (where completed work sits) |
 | **Team** | By Person: hours, story points, completion, blocked, and hours per story point |
-| **Hours** | Daily Hours Tracker as a heat map, plus hours by pillar |
 | **Insights** | Month over month: pick any two months and compare hours logged, tasks completed and due, on-time rate, and the By Person / By Pillar breakdowns, plus a six-month hours trend. Work is credited by Completed Date and Due Date, so earlier months fill in as the board accumulates history. |
 | **Settings** | The current month and archived months; add or remove team members, pillars and workstreams; glass and spatial controls |
 | **How It Works** | The sheet's rules for the team |

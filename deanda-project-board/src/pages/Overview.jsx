@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import Icon from '../components/Icon'
-import { Donut, MonthBars, StackBar, TickBar } from '../components/Charts'
-import { Avatar, CardHead, Segmented, Select, Words } from '../components/ui'
-import { STATUSES, TEAM, USER } from '../data/board'
-import { dow, fmtDay, fmtMonth, greeting, hrs, num, pts, todayISO } from '../lib/format'
+import { Donut, StackBar, TickBar } from '../components/Charts'
+import { Avatar, CardHead, Select, Words } from '../components/ui'
+import { STATUSES, USER } from '../data/board'
+import { fmtMonth, greeting, num, pts } from '../lib/format'
 import { useCountUp } from '../lib/hooks'
-import { byPillar, dailyDueOpen, dailyHours, isOpen, summary } from '../lib/selectors'
+import { byPillar, isOpen, summary } from '../lib/selectors'
 import { useApp } from '../lib/store'
+import { DailyHoursTracker, WhereHoursWent } from '../components/HoursCards'
 
 function Header() {
   const { openSheet, toast, month, go } = useApp()
@@ -149,20 +150,19 @@ function StatusCard({ tasks }) {
   )
 }
 
-const LOAD = { 'Open work': (p) => p.open, 'Story points': (p) => p.points, 'All tasks': (p) => p.planned }
 const TONES = ['teal', 'blue', 'sky']
 
 function PillarCard({ tasks }) {
-  const { go } = useApp()
-  const [range, setRange] = useState('Open work')
+  const { go, month } = useApp()
   const [active, setActive] = useState(-1)
-  const f = LOAD[range]
+  /* every task on this month's board, by pillar */
+  const f = (p) => p.planned
   const pillars = byPillar(tasks).sort((a, b) => f(b) - f(a))
   const total = pillars.reduce((a, p) => a + f(p), 0) || 1
   const top = pillars.slice(0, 3)
   const rest = pillars.slice(3)
   const restV = rest.reduce((a, p) => a + f(p), 0)
-  const fmt = range === 'Story points' ? pts : num
+  const fmt = num
   const rows = [
     ...top.map((p, i) => ({ name: p.name, email: p.blocked ? `${p.blocked} blocked` : `${p.owners.length} people`, tone: TONES[i], share: Math.round((f(p) / total) * 100), count: f(p) })),
     { name: `${rest.length} other pillars`, tone: 'hatch', share: Math.round((restV / total) * 100), count: restV },
@@ -170,9 +170,9 @@ function PillarCard({ tasks }) {
   return (
     <article className="card hl rise" style={{ '--d': 4 }}>
       <CardHead title="Pillar Load">
-        <Select value={range} options={Object.keys(LOAD)} onChange={setRange} />
+        <span className="faint-note">All tasks · {fmtMonth(month)}</span>
       </CardHead>
-      <div className="top" key={range}>
+      <div className="top">
         <StackBar rows={rows} active={active} onActive={setActive} />
         <ul className="top-list" onPointerLeave={() => setActive(-1)}>
           {rows.map((r, i) => (
@@ -192,47 +192,6 @@ function PillarCard({ tasks }) {
   )
 }
 
-const ALL = 'Whole team'
-const METRICS = ['Logged', 'Due']
-
-function HoursCard({ tasks, month }) {
-  const [who, setWho] = useState(ALL)
-  const [metric, setMetric] = useState('Logged')
-  const today = todayISO()
-  const logged = dailyHours(tasks, month, who === ALL ? null : who)
-  const due = dailyDueOpen(who === ALL ? tasks : tasks.filter((t) => t.owner === who), month)
-  const todayIdx = today.startsWith(month) ? Number(today.slice(8, 10)) - 1 : 0
-  const [pinned, setPinned] = useState(todayIdx)
-  const data = logged.map((v, i) => {
-    const day = `${month}-${String(i + 1).padStart(2, '0')}`
-    return { m: String(i + 1), day, closed: metric === 'Logged' ? v : due[i], open: 0, future: metric === 'Logged' && day > today }
-  })
-  return (
-    <article className="card months-card hl rise" style={{ '--d': 5 }}>
-      <CardHead title="Hours By Day">
-        <div className="head-tools">
-          <Segmented value={metric} options={METRICS} onChange={setMetric} />
-          <Select value={who} options={[ALL, ...TEAM.map((p) => p.name)]} onChange={setWho} />
-        </div>
-      </CardHead>
-      <div className="legend">
-        <span>
-          <i className="dot sky" /> {metric === 'Logged' ? 'Hours of tasks closed that day' : 'Open tasks due that day'}
-        </span>
-      </div>
-      <MonthBars
-        key={who + metric}
-        data={data}
-        pinned={pinned}
-        onPin={setPinned}
-        fmt={metric === 'Logged' ? hrs : num}
-        labels={{ open: null, closed: metric === 'Logged' ? 'hrs logged' : 'open & due' }}
-        tipTitle={(d) => `${dow(d.day)}, ${fmtDay(d.day)}`}
-      />
-    </article>
-  )
-}
-
 export default function Overview() {
   const { tasks, month } = useApp()
   const s = summary(tasks, month)
@@ -245,7 +204,8 @@ export default function Overview() {
         <OpenCard s={s} />
         <StatusCard tasks={tasks} />
         <PillarCard tasks={tasks} />
-        <HoursCard tasks={tasks} month={month} />
+        <DailyHoursTracker tasks={tasks} month={month} delay={5} />
+        <WhereHoursWent tasks={tasks} month={month} delay={6} />
       </div>
     </div>
   )

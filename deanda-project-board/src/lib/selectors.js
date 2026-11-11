@@ -141,24 +141,7 @@ export function dailyHours(tasks, ym, owner) {
   return out
 }
 
-/** Tasks marked Done per day of the month */
-export function dailyDone(tasks, ym, owner) {
-  const out = Array.from({ length: daysInMonth(ym) }, () => 0)
-  tasks.forEach((t) => {
-    if (owner && t.owner !== owner) return
-    if (isDone(t) && inMonth(t.completed, ym)) out[Number(t.completed.slice(8, 10)) - 1] += 1
-  })
-  return out
-}
 
-/** Open tasks due on each day of the month */
-export function dailyDueOpen(tasks, ym) {
-  const out = Array.from({ length: daysInMonth(ym) }, () => 0)
-  tasks.forEach((t) => {
-    if (isOpen(t) && inMonth(t.due, ym)) out[Number(t.due.slice(8, 10)) - 1] += 1
-  })
-  return out
-}
 
 /** Which bucket an open task's due date falls in */
 export function dueBucket(t, today = todayISO()) {

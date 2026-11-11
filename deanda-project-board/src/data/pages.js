@@ -6,7 +6,6 @@ export const PAGES = [
   { id: 'tasks', label: 'All Tasks', icon: 'task' },
   { id: 'pillars', label: 'Pillars', icon: 'layers' },
   { id: 'team', label: 'Team', icon: 'users' },
-  { id: 'hours', label: 'Hours', icon: 'clock' },
   { id: 'insights', label: 'Insights', icon: 'chart' },
   { id: 'settings', label: 'Settings', icon: 'sliders', low: true },
   { id: 'guide', label: 'How It Works', icon: 'help', low: true },
