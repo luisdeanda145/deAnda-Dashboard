@@ -7,11 +7,11 @@ import { isDone, personal } from '../lib/selectors'
 import DateGroups from '../components/DateGroups'
 import { useApp } from '../lib/store'
 
-const FILTERS = ['Open', 'Completed', 'All']
+const FILTERS = ['All', 'Open', 'Completed']
 
 export default function MyWork() {
   const { tasks, month, me, setMe, addTask, openTask, toast } = useApp()
-  const [filter, setFilter] = useState('Open')
+  const [filter, setFilter] = useState('All')
   const [draft, setDraft] = useState('')
   const p = personal(tasks, me, month)
   const today = todayISO()
@@ -23,7 +23,7 @@ export default function MyWork() {
     addTask({ title, owner: me, pillar: null, workstream: null, priority: 'P1', status: 'Not started', due: today, completed: null, points: null, hours: null, notes: null })
     toast({ icon: 'plus', title: 'Added for today', text: 'Open it to set pillar and hours' })
     setDraft('')
-    setFilter('Open')
+    if (filter === 'Completed') setFilter('All') // so the new task is visible
   }
 
   const open = p.mine.filter((t) => !isDone(t))

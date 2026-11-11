@@ -16,7 +16,7 @@ const COLS = [
   { id: 'points', label: 'Pts', num: true },
   { id: 'hours', label: 'Hrs', num: true },
 ]
-const FILTERS = ['Open', 'Completed', 'All']
+const FILTERS = ['All', 'Open', 'Completed']
 const ANY_OWNER = 'Everyone'
 const ANY_PILLAR = 'All pillars'
 const PAGE = 60
@@ -45,7 +45,7 @@ function dateRank(t, today) {
 export default function Tasks() {
   const { tasks, openTask, toast, preset, setPreset } = useApp()
   const [q, setQ] = useState('')
-  const [filter, setFilter] = useState(preset ? 'All' : 'Open')
+  const [filter, setFilter] = useState('All')
   const [owner, setOwner] = useState(ANY_OWNER)
   const [pillar, setPillar] = useState(ANY_PILLAR)
   const [rule, setRule] = useState(preset)
