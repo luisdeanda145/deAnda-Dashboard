@@ -506,7 +506,7 @@
   height: 56px;
 }
 .t-title {
-  max-width: 300px;
+  max-width: 185px;
   white-space: normal !important;
 }
 .t-title b,
@@ -533,7 +533,7 @@
 }
 .t-pillar em {
   display: block;
-  max-width: 160px;
+  max-width: 130px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -1850,4 +1850,58 @@
   .manage-sheet {
     width: 100%;
   }
+}
+
+/* ---------------- task dates (due + completed) ---------------- */
+.t-dates {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.t-dates > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.t-dates svg {
+  opacity: 0.7;
+}
+.t-dates .late {
+  color: var(--red);
+}
+.t-dates .t-done {
+  color: var(--teal);
+}
+.t-dates.t-stacked {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 70px;
+}
+.task .task-hrs {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.tcard footer .t-dates {
+  gap: 8px;
+  font-size: 12px;
+}
+.t-date-cell .t-dates.t-stacked {
+  align-items: flex-start;
+  min-width: 0;
+}
+.tasks-table th,
+.tasks-table td {
+  padding-left: 9px;
+  padding-right: 9px;
+}
+.tasks-table .who.sm {
+  white-space: nowrap;
 }

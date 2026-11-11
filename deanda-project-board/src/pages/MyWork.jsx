@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import Icon from '../components/Icon'
-import { Avatar, PageHead, Prio, Segmented, Select, Stat, StatusPill } from '../components/ui'
+import { Avatar, PageHead, Prio, Segmented, Select, Stat, StatusPill, TaskDates } from '../components/ui'
 import { TEAM, USER, pillarTone } from '../data/board'
-import { dueLabel, fmtDay, fmtMonth, hrs, todayISO } from '../lib/format'
+import { fmtMonth, hrs, pts, todayISO } from '../lib/format'
 import { BUCKETS, dueBucket, isDone, personal } from '../lib/selectors'
 import { useApp } from '../lib/store'
 
@@ -11,7 +11,6 @@ const CAP = 24
 
 export function TaskRow({ t, d, showOwner }) {
   const { toggleDone, openTask } = useApp()
-  const late = !isDone(t) && dueLabel(t.due).includes('late')
   return (
     <li
       className={`card task hl rise${isDone(t) ? ' done' : ''}${t.fresh ? ' fresh' : ''}`}
@@ -42,10 +41,11 @@ export function TaskRow({ t, d, showOwner }) {
         </span>
       </div>
       {t.status !== 'Not started' && t.status !== 'Done' && <StatusPill status={t.status} />}
-      <span className="task-hrs" title="Est. / real story points (hrs)">
-        {isDone(t) ? `${hrs(t.real)} / ${hrs(t.est)}h` : `${hrs(t.est)}h`}
+      <span className="task-hrs" title="Story points · hours">
+        <span>{pts(t.points)}</span>
+        {t.hours != null && <span>{hrs(t.hours)}h</span>}
       </span>
-      <time className={late ? 'late' : ''}>{isDone(t) ? fmtDay(t.completed) : dueLabel(t.due)}</time>
+      <TaskDates t={t} stack />
     </li>
   )
 }
@@ -62,7 +62,7 @@ export default function MyWork() {
     e.preventDefault()
     const title = draft.trim()
     if (!title) return
-    addTask({ title, owner: me, pillar: null, workstream: null, priority: 'P1', status: 'Not started', due: today, completed: null, est: null, real: null, notes: null })
+    addTask({ title, owner: me, pillar: null, workstream: null, priority: 'P1', status: 'Not started', due: today, completed: null, points: null, hours: null, notes: null })
     toast({ icon: 'plus', title: 'Added for today', text: 'Open it to set pillar and hours' })
     setDraft('')
     setFilter('Open')
@@ -96,8 +96,8 @@ export default function MyWork() {
       <div className="stats">
         <Stat d={1} icon="task" label="Open tasks" value={p.open} fmt={(v) => Math.round(v)} />
         <Stat d={2} icon="check" label="Done this month" value={p.doneMonth} fmt={(v) => Math.round(v)} />
-        <Stat d={3} icon="clock" label="Est. hours still open" value={p.estOpen} />
-        <Stat d={4} icon="bolt" label="Real hours this month" value={p.realMonth} />
+        <Stat d={3} icon="target" label="Story points still open" value={p.ptsOpen} />
+        <Stat d={4} icon="bolt" label="Hours this month" value={p.realMonth} />
       </div>
 
       <form className="add-task rise" style={{ '--d': 5 }} onSubmit={add}>

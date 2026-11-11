@@ -3,14 +3,14 @@ import { PageHead } from '../components/ui'
 
 const RULES = [
   {
-    icon: 'clock',
-    title: 'Story points are hours',
-    text: 'Put your estimate in Est. Story Points and the time it actually took in Real Story Points. Use quarter hours: 0.25, 0.5, 1.',
+    icon: 'target',
+    title: 'Story points are effort, hours are time',
+    text: 'Give each task story points for how big it is (1, 2, 3, 5, 8, 13), and log the Hours it actually took. Use quarter hours: 0.25, 0.5, 1.',
   },
   {
     icon: 'check',
     title: 'Hours count when a task is Done',
-    text: 'Real Story Points are credited to the day in Completed Date. Ticking a task off fills in today’s date for you — log the real hours too.',
+    text: 'Hours are credited to the day in Completed Date. Ticking a task off fills in today’s date for you and asks for the hours it took.',
   },
   {
     icon: 'circle',

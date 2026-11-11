@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import Icon from '../components/Icon'
-import { Avatar, PageHead, Prio, Select } from '../components/ui'
+import { Avatar, PageHead, Prio, Select, TaskDates } from '../components/ui'
 import { ALL_PILLARS, PRIORITIES, STATUSES, TEAM, pillarTone } from '../data/board'
-import { dueLabel, fmtDay, hrs, todayISO } from '../lib/format'
+import { hrs, pts, todayISO } from '../lib/format'
 import { useApp } from '../lib/store'
 
 const ANY_OWNER = 'Everyone'
@@ -30,8 +30,8 @@ export default function Board() {
     if (status === 'Done') {
       const patch = { status, completed: t.completed || todayISO() }
       patchTask(id, patch)
-      /* the sheet's own rule: hours only count with Real Story Points filled in */
-      if (t.real == null) openSheet({ task: { ...t, ...patch, real: t.est }, hint: 'Log the real hours it took — they count toward the Overview once saved.' })
+      /* hours only count once they're logged, so ask for them */
+      if (t.hours == null) openSheet({ task: { ...t, ...patch }, hint: 'Log the hours it took — they count toward Hours Logged once saved.' })
       else toast({ icon: 'check', title: 'Done', text: t.title })
     } else {
       patchTask(id, { status, completed: null })
@@ -70,7 +70,7 @@ export default function Board() {
           )}
         </div>
         <span className="muted-line">
-          {list.length} tasks · {hrs(list.reduce((a, t) => a + (t.est || 0), 0))} hrs planned
+          {list.length} tasks · {pts(list.reduce((a, t) => a + (t.points || 0), 0))}
         </span>
       </div>
 
@@ -82,7 +82,8 @@ export default function Board() {
               ? col.sort((a, b) => (b.completed || '').localeCompare(a.completed || ''))
               : col.sort((a, b) => (a.priority || 'P9').localeCompare(b.priority || 'P9') || (a.due || '9').localeCompare(b.due || '9'))
           const cut = open[s.id] ? col : col.slice(0, CAP)
-          const est = col.reduce((a, t) => a + (t.est || 0), 0)
+          const pointsIn = col.reduce((a, t) => a + (t.points || 0), 0)
+          const hoursIn = col.reduce((a, t) => a + (t.hours || 0), 0)
           return (
             <section
               key={s.id}
@@ -104,11 +105,10 @@ export default function Board() {
                 <i className={`dot ${s.tone}`} />
                 <b>{s.id}</b>
                 <span>{col.length}</span>
-                <em>{hrs(est)}h</em>
+                <em>{s.id === 'Done' ? `${hrs(hoursIn)}h` : pts(pointsIn)}</em>
               </header>
               <div className="lane-cards">
                 {cut.map((t) => {
-                  const late = s.id !== 'Done' && dueLabel(t.due).includes('late')
                   return (
                     <article
                       key={t.id}
@@ -139,12 +139,13 @@ export default function Board() {
                       {t.notes && s.id === 'Blocked' && <span className="tcard-note">{t.notes}</span>}
                       <footer>
                         <Avatar person={t.owner} size={22} />
-                        <span className={late ? 'late' : ''}>
-                          <Icon name={s.id === 'Done' ? 'check' : 'calendar'} size={13} /> {s.id === 'Done' ? fmtDay(t.completed) : dueLabel(t.due)}
-                        </span>
-                        <span>
-                          <Icon name="clock" size={13} /> {s.id === 'Done' && t.real != null ? hrs(t.real) : hrs(t.est)}h
-                        </span>
+                        <TaskDates t={t} />
+                        {t.points != null && <span title="Story points">{pts(t.points)}</span>}
+                        {t.hours != null && (
+                          <span title="Hours">
+                            <Icon name="clock" size={13} /> {hrs(t.hours)}h
+                          </span>
+                        )}
                         {s.id !== 'Done' && (
                           <button
                             type="button"

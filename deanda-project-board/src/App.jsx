@@ -177,8 +177,11 @@ export default function App() {
         patchTask(t.id, { status: 'In progress', completed: null })
         toast({ icon: 'sync', title: 'Reopened', text: t.title })
       } else {
-        patchTask(t.id, { status: 'Done', completed: t.completed || todayISO(), real: t.real ?? t.est ?? null })
-        toast({ icon: 'check', title: 'Done', text: t.real == null ? 'Real hours set to the estimate — adjust if needed' : t.title })
+        const patch = { status: 'Done', completed: t.completed || todayISO() }
+        patchTask(t.id, patch)
+        /* hours only count once they're logged, so ask for them */
+        if (t.hours == null) setSheet({ task: { ...t, ...patch }, hint: 'Log the hours it took — they count toward Hours Logged once saved.' })
+        else toast({ icon: 'check', title: 'Done', text: t.title })
       }
     },
     [patchTask, toast],

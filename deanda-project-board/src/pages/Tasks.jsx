@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import Icon from '../components/Icon'
-import { Avatar, PageHead, Prio, Segmented, Select, StatusPill } from '../components/ui'
+import { Avatar, PageHead, Prio, Segmented, Select, StatusPill, TaskDates } from '../components/ui'
 import { ALL_PILLARS, TEAM, pillarTone } from '../data/board'
-import { dueLabel, fmtDay, hrs } from '../lib/format'
+import { hrs } from '../lib/format'
 import { HYGIENE, isDone } from '../lib/selectors'
 import { useApp } from '../lib/store'
 
@@ -12,17 +12,17 @@ const COLS = [
   { id: 'pillar', label: 'Pillar / workstream' },
   { id: 'priority', label: 'Priority' },
   { id: 'status', label: 'Status' },
-  { id: 'due', label: 'Due' },
-  { id: 'est', label: 'Est.', num: true },
-  { id: 'real', label: 'Real', num: true },
+  { id: 'due', label: 'Dates' },
+  { id: 'points', label: 'Pts', num: true },
+  { id: 'hours', label: 'Hrs', num: true },
 ]
 const FILTERS = ['Open', 'Done', 'All']
 const ANY_OWNER = 'Everyone'
 const ANY_PILLAR = 'All pillars'
 const PAGE = 60
 
-const CSV_COLS = ['owner', 'title', 'pillar', 'workstream', 'priority', 'status', 'due', 'completed', 'est', 'real', 'notes']
-const CSV_HEAD = ['Owner', 'Task', 'Pillar', 'Workstream', 'Priority', 'Status', 'Due Date', 'Completed Date', 'Est. Story Points (hrs)', 'Real Story Points (hrs)', 'Notes']
+const CSV_COLS = ['owner', 'title', 'pillar', 'workstream', 'priority', 'status', 'due', 'completed', 'points', 'hours', 'notes']
+const CSV_HEAD = ['Owner', 'Task', 'Pillar', 'Workstream', 'Priority', 'Status', 'Due Date', 'Completed Date', 'Story Points', 'Hours', 'Notes']
 const cell = (v) => (v == null ? '' : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v))
 
 /** The ToDo Feed: every row from every personal tab in one sortable table. */
@@ -56,7 +56,7 @@ export default function Tasks() {
       return (typeof x === 'number' ? x - y : String(x).localeCompare(String(y))) * sort.dir
     })
 
-  const by = (id) => setSort((o) => ({ by: id, dir: o.by === id ? -o.dir : id === 'est' || id === 'real' ? -1 : 1 }))
+  const by = (id) => setSort((o) => ({ by: id, dir: o.by === id ? -o.dir : id === 'points' || id === 'hours' ? -1 : 1 }))
 
   const exportCsv = () => {
     const body = [CSV_HEAD.join(','), ...rows.map((t) => CSV_COLS.map((c) => cell(t[c])).join(','))].join('\n')
@@ -118,7 +118,6 @@ export default function Tasks() {
             </thead>
             <tbody>
               {rows.slice(0, limit).map((t, i) => {
-                const late = !isDone(t) && dueLabel(t.due).includes('late')
                 return (
                   <tr key={t.id} style={{ '--i': Math.min(i, 20) }} onClick={() => openTask(t)}>
                     <td className="t-title">
@@ -149,9 +148,11 @@ export default function Tasks() {
                     <td>
                       <StatusPill status={t.status} />
                     </td>
-                    <td className={late ? 'late' : 'muted'}>{isDone(t) ? `✓ ${fmtDay(t.completed)}` : dueLabel(t.due)}</td>
-                    <td className="num">{hrs(t.est)}</td>
-                    <td className="num">{hrs(t.real)}</td>
+                    <td className="t-date-cell">
+                      <TaskDates t={t} stack />
+                    </td>
+                    <td className="num">{t.points ?? '—'}</td>
+                    <td className="num">{hrs(t.hours)}</td>
                   </tr>
                 )
               })}

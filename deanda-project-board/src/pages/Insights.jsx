@@ -1,8 +1,8 @@
 import Icon from '../components/Icon'
 import { Avatar, CardHead, PageHead, Prio, Stat } from '../components/ui'
 import { PRIORITIES, TEAM } from '../data/board'
-import { hrs, todayISO } from '../lib/format'
-import { HYGIENE, dueBucket, isDone, isOpen } from '../lib/selectors'
+import { hrs, pts, todayISO } from '../lib/format'
+import { HYGIENE, dueBucket, hoursPerPoint, isDone, isOpen } from '../lib/selectors'
 import { useApp } from '../lib/store'
 
 const sum = (l, f) => l.reduce((a, t) => a + (f(t) || 0), 0)
@@ -11,17 +11,20 @@ const sum = (l, f) => l.reduce((a, t) => a + (f(t) || 0), 0)
 export default function Insights() {
   const { tasks, setPreset, go } = useApp()
   const today = todayISO()
-  const both = tasks.filter((t) => isDone(t) && t.est > 0 && t.real != null)
-  const ratio = sum(both, (t) => t.real) / (sum(both, (t) => t.est) || 1)
+  const both = tasks.filter((t) => isDone(t) && t.points > 0 && t.hours != null)
+  const rate = hoursPerPoint(tasks)
   const buckets = ['Overdue', 'Today', 'This week', 'Later', 'No date'].map((b) => ({ b, list: tasks.filter((t) => dueBucket(t, today) === b) }))
   const count = (b) => buckets.find((x) => x.b === b).list.length
   const p0 = tasks.filter((t) => isOpen(t) && t.priority === 'P0')
 
-  const est = TEAM.map((p) => {
+  /* how many hours a story point takes each person, on Done tasks with both */
+  const pace = TEAM.map((p) => {
     const l = both.filter((t) => t.owner === p.name)
-    return { name: p.name, est: sum(l, (t) => t.est), real: sum(l, (t) => t.real), n: l.length }
+    const points = sum(l, (t) => t.points)
+    const hours = sum(l, (t) => t.hours)
+    return { name: p.name, points, hours, rate: points ? hours / points : 0, n: l.length }
   }).filter((x) => x.n)
-  const eMax = Math.max(1, ...est.flatMap((x) => [x.est, x.real]))
+  const rMax = Math.max(0.01, ...pace.map((x) => x.rate))
 
   const prios = [...PRIORITIES.map((p) => p.id), null].map((id) => {
     const l = tasks.filter((t) => (t.priority || null) === id)
@@ -40,7 +43,7 @@ export default function Insights() {
       <PageHead title="Insights" sub="How the board is really running" />
 
       <div className="stats">
-        <Stat d={1} icon="target" label="Real ÷ estimated hours" value={ratio * 100} fmt={(v) => `${Math.round(v)}%`} note={Math.abs(ratio - 1) <= 0.05 ? 'Estimates are on target' : ratio > 1 ? 'Tasks run longer than planned' : 'Tasks come in under estimate'} />
+        <Stat d={1} icon="target" label="Hours per story point" value={rate || 0} fmt={(v) => (rate == null ? '—' : `${hrs(v)}h`)} note={rate == null ? 'Shows once done tasks have story points' : `Across ${both.length} done tasks`} />
         <Stat d={2} icon="alert" label="Open and overdue" value={count('Overdue')} fmt={(v) => Math.round(v)} tone={count('Overdue') ? 'red' : undefined} />
         <Stat d={3} icon="calendar" label="Due in the next 7 days" value={count('Today') + count('This week')} fmt={(v) => Math.round(v)} />
         <Stat d={4} icon="flag" label="P0s still open" value={p0.length} fmt={(v) => Math.round(v)} />
@@ -48,33 +51,25 @@ export default function Insights() {
 
       <div className="ins-grid">
         <article className="card rise" style={{ '--d': 5 }}>
-          <CardHead title="Estimate vs Actual" />
-          <p className="muted-line">Done tasks with both estimate and real hours</p>
+          <CardHead title="Hours per Story Point" />
+          <p className="muted-line">Done tasks with both story points and hours</p>
+          {pace.length === 0 && <p className="muted-line">Nothing yet. Give tasks story points and this fills in as they are closed.</p>}
           <ul className="pairs">
-            {est.map((x, i) => (
+            {pace.map((x, i) => (
               <li key={x.name} style={{ '--i': i }}>
                 <span className="who sm">
                   <Avatar person={x.name} size={24} />
                   {x.name}
                 </span>
                 <span className="pair-bars">
-                  <i className="pe" style={{ width: `${(x.est / eMax) * 100}%` }} />
-                  <i className="pr" style={{ width: `${(x.real / eMax) * 100}%` }} />
+                  <i className="pr" style={{ width: `${(x.rate / rMax) * 100}%` }} />
                 </span>
                 <span className="pair-n">
-                  <b>{hrs(x.real)}</b> / {hrs(x.est)}h
+                  <b>{hrs(x.rate)}h</b> / pt <em className="faint">· {pts(x.points)}</em>
                 </span>
               </li>
             ))}
           </ul>
-          <div className="legend">
-            <span>
-              <i className="ring" /> Estimated
-            </span>
-            <span>
-              <i className="dot blue" /> Real
-            </span>
-          </div>
         </article>
 
         <article className="card rise" style={{ '--d': 6 }}>
@@ -88,7 +83,7 @@ export default function Insights() {
                   <i className={b.b === 'Overdue' ? 'red' : b.b === 'No date' ? 'mute' : b.b === 'Later' ? 'sky' : 'blue'} style={{ width: `${(b.list.length / bMax) * 100}%` }} />
                 </div>
                 <b>{b.list.length}</b>
-                <small>{hrs(sum(b.list, (t) => t.est))}h</small>
+                <small>{pts(sum(b.list, (t) => t.points))}</small>
               </li>
             ))}
           </ul>

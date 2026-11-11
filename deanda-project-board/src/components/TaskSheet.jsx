@@ -6,6 +6,8 @@ import { todayISO } from '../lib/format'
 import { useApp } from '../lib/store'
 
 const NONE = '—'
+/** the usual story-point scale */
+const POINTS = [NONE, '1', '2', '3', '5', '8', '13']
 const blank = (me) => ({
   title: '',
   owner: me,
@@ -15,8 +17,8 @@ const blank = (me) => ({
   status: 'Not started',
   due: todayISO(),
   completed: null,
-  est: null,
-  real: null,
+  points: null,
+  hours: null,
   notes: '',
 })
 
@@ -62,7 +64,7 @@ export default function TaskSheet({ task, hint, onClose }) {
   const put = (patch) => setT((x) => ({ ...x, ...patch }))
 
   const setStatus = (status) =>
-    put(status === 'Done' ? { status, completed: t.completed || todayISO(), real: t.real ?? t.est } : { status, completed: null })
+    put(status === 'Done' ? { status, completed: t.completed || todayISO() } : { status, completed: null })
 
   const save = async (e) => {
     e?.preventDefault()
@@ -169,11 +171,11 @@ export default function TaskSheet({ task, hint, onClose }) {
               onChange={(e) => put({ completed: e.target.value || null })}
             />
           </Field>
-          <Field label="Est. story points">
-            <Hours label="estimate" value={t.est} onChange={(est) => put({ est })} />
+          <Field label="Story points">
+            <Segmented value={t.points == null ? NONE : String(t.points)} options={POINTS} onChange={(v) => put({ points: v === NONE ? null : Number(v) })} />
           </Field>
-          <Field label="Real story points">
-            <Hours label="real hours" value={t.real} onChange={(real) => put({ real })} />
+          <Field label="Hours">
+            <Hours label="hours" value={t.hours} onChange={(hours) => put({ hours })} />
           </Field>
           <Field label="Notes" wide>
             <textarea rows={2} value={t.notes || ''} placeholder="Context, links, who you’re waiting on…" onChange={(e) => put({ notes: e.target.value })} />
@@ -186,7 +188,7 @@ export default function TaskSheet({ task, hint, onClose }) {
               <Icon name="trash" size={16} /> Delete
             </button>
           )}
-          <span className="ts-rule">Story points are hours. Real hours count once the task is Done with a Completed Date.</span>
+          <span className="ts-rule">Story points are effort, not time. Hours count once the task is Done with a Completed Date.</span>
           <button type="button" className="cta ghost" onClick={onClose}>
             Cancel
           </button>

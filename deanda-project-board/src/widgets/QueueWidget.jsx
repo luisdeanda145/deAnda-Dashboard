@@ -1,7 +1,7 @@
 import Icon from '../components/Icon'
 import { CardHead } from '../components/ui'
 import { USER } from '../data/board'
-import { dueLabel, hrs } from '../lib/format'
+import { dueLabel, pts } from '../lib/format'
 import { useCountUp } from '../lib/hooks'
 import { isOpen } from '../lib/selectors'
 import { useApp } from '../lib/store'
@@ -10,7 +10,7 @@ import { useApp } from '../lib/store'
 export default function QueueWidget() {
   const { tasks, openTask, setMe, go } = useApp()
   const mine = tasks.filter((t) => t.owner === USER.name && isOpen(t))
-  const est = mine.reduce((a, t) => a + (t.est || 0), 0)
+  const points = mine.reduce((a, t) => a + (t.points || 0), 0)
   const next = mine.filter((t) => t.due).sort((a, b) => a.due.localeCompare(b.due))[0]
   const n = useCountUp(mine.length, 1200, 650)
 
@@ -30,7 +30,7 @@ export default function QueueWidget() {
       </CardHead>
       <div className="credits-row">
         <strong className="figure">{Math.round(n)}</strong>
-        <span className="used">{hrs(est)} hrs estimated</span>
+        <span className="used">{points ? `${pts(points)} open` : 'No story points yet'}</span>
         <button type="button" className="plus-btn" aria-label="New task" onClick={() => openTask({ owner: USER.name })}>
           <Icon name="plus" size={18} stroke={2.4} />
         </button>

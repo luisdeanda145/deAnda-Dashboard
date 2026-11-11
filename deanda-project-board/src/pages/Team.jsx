@@ -4,11 +4,9 @@ import { fmtMonth, hrs } from '../lib/format'
 import { byPerson } from '../lib/selectors'
 import { useApp } from '../lib/store'
 
-function accuracyLabel(a) {
-  if (a == null) return { text: 'No hours logged yet', tone: 'mute' }
-  const d = Math.round((a - 1) * 100)
-  if (Math.abs(d) <= 10) return { text: 'On estimate', tone: 'teal' }
-  return d > 0 ? { text: `Runs ${d}% over estimate`, tone: 'amber' } : { text: `${-d}% under estimate`, tone: 'blue' }
+function paceLabel(rate) {
+  if (rate == null) return { text: 'No story points closed yet', tone: 'mute' }
+  return { text: `${hrs(rate)} hrs per story point`, tone: 'blue' }
 }
 
 /** Overview → BY PERSON, as a card per teammate plus the full table. */
@@ -31,7 +29,7 @@ export default function Team() {
 
       <div className="team-grid">
         {people.map((p, i) => {
-          const acc = accuracyLabel(p.accuracy)
+          const acc = paceLabel(p.hrsPerPt)
           const tot = p.planned || 1
           return (
             <article key={p.name} className="card person hl rise" style={{ '--d': i + 1 }}>
@@ -97,8 +95,8 @@ export default function Team() {
                 <th className="num">In progress</th>
                 <th className="num">Not started</th>
                 <th className="num">Blocked</th>
-                <th className="num">Planned hrs</th>
-                <th className="num">Completed hrs</th>
+                <th className="num">Story pts</th>
+                <th className="num">Pts done</th>
                 <th className="num">Logged (month)</th>
               </tr>
             </thead>
@@ -116,8 +114,8 @@ export default function Team() {
                   <td className="num">{p.inProgress}</td>
                   <td className="num">{p.notStarted}</td>
                   <td className={`num${p.blocked ? ' late' : ''}`}>{p.blocked}</td>
-                  <td className="num">{hrs(p.plannedSP)}</td>
-                  <td className="num">{hrs(p.completedSP)}</td>
+                  <td className="num">{hrs(p.plannedPts)}</td>
+                  <td className="num">{hrs(p.donePts)}</td>
                   <td className="num">
                     <b>{hrs(p.hours)}</b>
                   </td>
@@ -132,7 +130,7 @@ export default function Team() {
                     {people.reduce((a, p) => a + p[k], 0)}
                   </td>
                 ))}
-                {['plannedSP', 'completedSP', 'hours'].map((k) => (
+                {['plannedPts', 'donePts', 'hours'].map((k) => (
                   <td key={k} className="num">
                     {hrs(people.reduce((a, p) => a + p[k], 0))}
                   </td>

@@ -3,7 +3,7 @@ import Icon from '../components/Icon'
 import { Donut, MonthBars, StackBar, TickBar } from '../components/Charts'
 import { Avatar, CardHead, Segmented, Select, Words } from '../components/ui'
 import { STATUSES, TEAM, USER } from '../data/board'
-import { dow, fmtDay, fmtMonth, greeting, hrs, num, todayISO } from '../lib/format'
+import { dow, fmtDay, fmtMonth, greeting, hrs, num, pts, todayISO } from '../lib/format'
 import { useCountUp } from '../lib/hooks'
 import { byPillar, dailyDueOpen, dailyHours, isOpen, summary } from '../lib/selectors'
 import { useApp } from '../lib/store'
@@ -66,22 +66,25 @@ function Header() {
 function PointsCard({ s, ipSP }) {
   const pct = useCountUp(s.donePct, 1300, 350)
   const ip = s.planned ? (ipSP / s.planned) * 100 : 0
+  const none = s.planned === 0
   return (
     <article className="card kpi-card hl rise" style={{ '--d': 1 }}>
       <CardHead title="Story Points Done" />
       <div className="kpi">
-        <strong className="figure">{pct.toFixed(1)}%</strong>
-        <span className="kpi-note">
-          {hrs(s.completed)} of {hrs(s.planned)} hrs planned
-        </span>
+        <strong className="figure">{none ? '—' : `${pct.toFixed(1)}%`}</strong>
+        <span className="kpi-note">{none ? 'No story points on tasks yet' : `${pts(s.completed)} of ${pts(s.planned)}`}</span>
       </div>
       <TickBar
         delay={0.35}
-        segments={[
-          { to: s.donePct, tone: 'teal', label: `Done · ${hrs(s.completed)} hrs` },
-          { to: s.donePct + ip, tone: 'blue', label: `In progress · ${hrs(ipSP)} hrs` },
-          { to: 100, tone: 'mute', label: `Not started or blocked · ${hrs(s.planned - s.completed - ipSP)} hrs` },
-        ]}
+        segments={
+          none
+            ? [{ to: 100, tone: 'mute', label: 'Give tasks story points to track this' }]
+            : [
+                { to: s.donePct, tone: 'teal', label: `Done · ${pts(s.completed)}` },
+                { to: s.donePct + ip, tone: 'blue', label: `In progress · ${pts(ipSP)}` },
+                { to: 100, tone: 'mute', label: `Not started or blocked · ${pts(s.planned - s.completed - ipSP)}` },
+              ]
+        }
       />
     </article>
   )
@@ -146,7 +149,7 @@ function StatusCard({ tasks }) {
   )
 }
 
-const LOAD = { 'Open work': (p) => p.open, 'Planned hrs': (p) => p.plannedSP, 'All tasks': (p) => p.planned }
+const LOAD = { 'Open work': (p) => p.open, 'Story points': (p) => p.points, 'All tasks': (p) => p.planned }
 const TONES = ['teal', 'blue', 'sky']
 
 function PillarCard({ tasks }) {
@@ -159,7 +162,7 @@ function PillarCard({ tasks }) {
   const top = pillars.slice(0, 3)
   const rest = pillars.slice(3)
   const restV = rest.reduce((a, p) => a + f(p), 0)
-  const fmt = range === 'Planned hrs' ? (v) => `${hrs(v)}h` : num
+  const fmt = range === 'Story points' ? pts : num
   const rows = [
     ...top.map((p, i) => ({ name: p.name, email: p.blocked ? `${p.blocked} blocked` : `${p.owners.length} people`, tone: TONES[i], share: Math.round((f(p) / total) * 100), count: f(p) })),
     { name: `${rest.length} other pillars`, tone: 'hatch', share: Math.round((restV / total) * 100), count: restV },
@@ -214,7 +217,7 @@ function HoursCard({ tasks, month }) {
       </CardHead>
       <div className="legend">
         <span>
-          <i className="dot sky" /> {metric === 'Logged' ? 'Real hours of tasks closed that day' : 'Estimated hours of open work due that day'}
+          <i className="dot sky" /> {metric === 'Logged' ? 'Hours of tasks closed that day' : 'Open tasks due that day'}
         </span>
       </div>
       <MonthBars
@@ -222,8 +225,8 @@ function HoursCard({ tasks, month }) {
         data={data}
         pinned={pinned}
         onPin={setPinned}
-        fmt={hrs}
-        labels={{ open: null, closed: metric === 'Logged' ? 'hrs logged' : 'hrs open & due' }}
+        fmt={metric === 'Logged' ? hrs : num}
+        labels={{ open: null, closed: metric === 'Logged' ? 'hrs logged' : 'open & due' }}
         tipTitle={(d) => `${dow(d.day)}, ${fmtDay(d.day)}`}
       />
     </article>
@@ -233,7 +236,7 @@ function HoursCard({ tasks, month }) {
 export default function Overview() {
   const { tasks, month } = useApp()
   const s = summary(tasks, month)
-  const ipSP = tasks.filter((t) => t.status === 'In progress').reduce((a, t) => a + (t.est || 0), 0)
+  const ipSP = tasks.filter((t) => t.status === 'In progress').reduce((a, t) => a + (t.points || 0), 0)
   return (
     <div className="overview">
       <Header />

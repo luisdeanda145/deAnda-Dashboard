@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Icon from '../components/Icon'
 import { CardHead, Faces, PageHead, Segmented } from '../components/ui'
 import { WORKSTREAMS } from '../data/board'
-import { hrs } from '../lib/format'
+import { hrs, pts } from '../lib/format'
 import { byPillar, byWorkstream, isOpen } from '../lib/selectors'
 import { useApp } from '../lib/store'
 import { TaskRow } from './MyWork'
@@ -14,7 +14,7 @@ export default function Pillars() {
   const { tasks, openTask, manage } = useApp()
   const [sort, setSort] = useState('Open')
   const all = byPillar(tasks)
-  const list = [...all].sort((a, b) => (sort === 'Open' ? b.open - a.open : sort === 'Hours' ? b.plannedSP - a.plannedSP : a.name.localeCompare(b.name)))
+  const list = [...all].sort((a, b) => (sort === 'Open' ? b.open - a.open : sort === 'Hours' ? b.hours - a.hours : a.name.localeCompare(b.name)))
   const [pick, setPick] = useState(() => [...all].sort((a, b) => b.open - a.open)[0].name)
   const p = all.find((x) => x.name === pick) || all[0] // the picked pillar may have been removed
   const ws = byWorkstream(tasks, p.name)
@@ -83,12 +83,12 @@ export default function Pillars() {
                 <b>{p.blocked}</b>
               </div>
               <div>
-                <small>Est. hrs</small>
-                <b>{hrs(p.plannedSP)}</b>
+                <small>Story pts</small>
+                <b>{hrs(p.points)}</b>
               </div>
               <div>
-                <small>Real hrs</small>
-                <b>{hrs(p.realSP)}</b>
+                <small>Hours</small>
+                <b>{hrs(p.hours)}</b>
               </div>
             </div>
             <div className="pl-prog">
@@ -121,7 +121,7 @@ export default function Pillars() {
                   <span className="ws-n">
                     {w.completed}/{w.planned}
                   </span>
-                  <span className="ws-h">{hrs(w.plannedSP)}h</span>
+                  <span className="ws-h">{pts(w.points)}</span>
                 </li>
               ))}
             </ul>
@@ -133,7 +133,7 @@ export default function Pillars() {
                 <span>
                   <i className="ring" /> Open
                 </span>
-                <span className="faint">Count · planned hrs</span>
+                <span className="faint">Count · story points</span>
               </div>
             )}
           </article>

@@ -4,6 +4,9 @@ export const num = (n) => nf.format(Math.round(n))
 export const pct = (n, digits = 1) => `${Math.abs(n).toFixed(digits).replace(/\.0$/, '')}%`
 
 /** Hours with at most one decimal: 12, 12.5, 0.3 */
+/** Story points: "3 pts", "—" when unset */
+export const pts = (n) => (n == null || Number.isNaN(n) ? '—' : `${nf.format(Math.round(n * 10) / 10)} pts`)
+
 export const hrs = (n) => {
   if (n == null || Number.isNaN(n)) return '—'
   const r = Math.round(n * 10) / 10

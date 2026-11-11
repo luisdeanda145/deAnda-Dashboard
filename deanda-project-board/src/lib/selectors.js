@@ -5,9 +5,10 @@
 
    Rules (from the sheet):
    · Open = any task whose status is not Done (no status counts as open)
-   · Story points are hours. Planned = Est. Story Points.
-   · Hours logged = Real Story Points of Done tasks, credited to the
-     day in Completed Date.
+   · Story points measure effort, not time. Planned = all story points.
+   · Hours logged = Hours of Done tasks, credited to the day in
+     Completed Date.
+   · Hours per point = hours ÷ story points on Done tasks that have both.
    ============================================================ */
 import { PILLARS, TEAM, WORKSTREAMS } from '../data/board'
 import { addDays, daysInMonth, diffDays, inMonth, todayISO } from './format'
@@ -17,12 +18,19 @@ export const isDone = (t) => t.status === 'Done'
 export const isOpen = (t) => !isDone(t)
 
 /** Hours a task has logged in a month (0 unless Done with a Completed Date in it). */
-export const loggedIn = (t, ym) => (isDone(t) && inMonth(t.completed, ym) ? t.real || 0 : 0)
+export const loggedIn = (t, ym) => (isDone(t) && inMonth(t.completed, ym) ? t.hours || 0 : 0)
+
+/** Hours per story point over Done tasks that have both, or null. */
+export function hoursPerPoint(list) {
+  const both = list.filter((t) => isDone(t) && t.points > 0 && t.hours != null)
+  const p = sum(both, (t) => t.points)
+  return p ? sum(both, (t) => t.hours) / p : null
+}
 
 /** Overview → TEAM SUMMARY */
 export function summary(tasks, ym) {
-  const planned = sum(tasks, (t) => t.est)
-  const completed = sum(tasks.filter(isDone), (t) => t.est)
+  const planned = sum(tasks, (t) => t.points)
+  const completed = sum(tasks.filter(isDone), (t) => t.points)
   return {
     total: tasks.length,
     open: tasks.filter(isOpen).length,
@@ -44,7 +52,7 @@ export function personal(tasks, owner, ym) {
     mine,
     open: mine.filter(isOpen).length,
     doneMonth: mine.filter((t) => isDone(t) && inMonth(t.completed, ym)).length,
-    estOpen: sum(mine.filter(isOpen), (t) => t.est),
+    ptsOpen: sum(mine.filter(isOpen), (t) => t.points),
     realMonth: sum(mine, (t) => loggedIn(t, ym)),
   }
 }
@@ -65,9 +73,6 @@ export function byPerson(tasks, ym) {
   return TEAM.map((p) => {
     const mine = tasks.filter((t) => t.owner === p.name)
     const done = mine.filter(isDone)
-    const both = done.filter((t) => t.est > 0 && t.real != null)
-    const estB = sum(both, (t) => t.est)
-    const realB = sum(both, (t) => t.real)
     return {
       ...p,
       role: p.role || focusOf(tasks, p.name),
@@ -76,11 +81,11 @@ export function byPerson(tasks, ym) {
       inProgress: mine.filter((t) => t.status === 'In progress').length,
       notStarted: mine.filter((t) => t.status === 'Not started').length,
       blocked: mine.filter((t) => t.status === 'Blocked').length,
-      plannedSP: sum(mine, (t) => t.est),
-      completedSP: sum(done, (t) => t.est),
+      plannedPts: sum(mine, (t) => t.points),
+      donePts: sum(done, (t) => t.points),
       hours: sum(mine, (t) => loggedIn(t, ym)),
-      /* real ÷ estimate on tasks that have both; 1 = spot on, >1 = ran over */
-      accuracy: estB ? realB / estB : null,
+      /* hours worked per story point, on Done tasks that have both */
+      hrsPerPt: hoursPerPoint(done),
     }
   })
 }
@@ -98,8 +103,8 @@ export function byPillar(tasks) {
       notStarted: list.filter((t) => t.status === 'Not started').length,
       blocked: list.filter((t) => t.status === 'Blocked').length,
       open: list.filter(isOpen).length,
-      plannedSP: sum(list, (t) => t.est),
-      realSP: sum(list, (t) => t.real),
+      points: sum(list, (t) => t.points),
+      hours: sum(list, (t) => t.hours),
       owners: [...new Set(list.map((t) => t.owner))],
     }
   })
@@ -117,7 +122,7 @@ export function byWorkstream(tasks, pillar) {
         planned: ws.length,
         completed: ws.filter(isDone).length,
         open: ws.filter(isOpen).length,
-        plannedSP: sum(ws, (t) => t.est),
+        points: sum(ws, (t) => t.points),
       }
     })
     .filter((w) => w.planned > 0)
@@ -146,11 +151,11 @@ export function dailyDone(tasks, ym, owner) {
   return out
 }
 
-/** Estimated hours of still-open work due on each day of the month */
+/** Open tasks due on each day of the month */
 export function dailyDueOpen(tasks, ym) {
   const out = Array.from({ length: daysInMonth(ym) }, () => 0)
   tasks.forEach((t) => {
-    if (isOpen(t) && inMonth(t.due, ym)) out[Number(t.due.slice(8, 10)) - 1] += t.est || 0
+    if (isOpen(t) && inMonth(t.due, ym)) out[Number(t.due.slice(8, 10)) - 1] += 1
   })
   return out
 }
@@ -169,9 +174,9 @@ export const BUCKETS = ['Overdue', 'Today', 'This week', 'Later', 'No date', 'Do
 
 /** Rows that break the sheet's own rules, so hours or totals come out wrong */
 export const HYGIENE = [
-  { id: 'noReal', label: 'Done without Real Story Points', hint: 'Hours not counted on the Overview', test: (t) => isDone(t) && t.real == null },
+  { id: 'noHours', label: 'Done without hours', hint: 'Not counted in hours logged', test: (t) => isDone(t) && t.hours == null },
   { id: 'noCompleted', label: 'Done without a Completed Date', hint: 'Hours can’t be credited to a day', test: (t) => isDone(t) && !t.completed },
-  { id: 'noEst', label: 'No Est. Story Points', hint: 'Missing from planned hours', test: (t) => t.est == null },
+  { id: 'noPoints', label: 'No story points', hint: 'Left out of story points done', test: (t) => t.points == null },
   { id: 'noWorkstream', label: 'No Workstream picked', hint: 'Left out of By Workstream', test: (t) => !t.workstream },
   { id: 'noDue', label: 'Open with no Due Date', hint: 'Can’t be scheduled', test: (t) => isOpen(t) && !t.due },
 ]
@@ -194,11 +199,9 @@ export function monthStats(tasks, ym) {
   const done = tasks.filter((t) => isDone(t) && inMonth(t.completed, ym))
   const due = tasks.filter((t) => inMonth(t.due, ym))
   const dueDone = due.filter((t) => isDone(t) && t.completed)
-  const both = done.filter((t) => t.est > 0 && t.real != null)
-  const estB = sum(both, (t) => t.est)
   const hoursBy = (key) => {
     const out = {}
-    done.forEach((t) => t[key] && (out[t[key]] = (out[t[key]] || 0) + (t.real || 0)))
+    done.forEach((t) => t[key] && (out[t[key]] = (out[t[key]] || 0) + (t.hours || 0)))
     return out
   }
   const doneBy = (key) => {
@@ -209,11 +212,11 @@ export function monthStats(tasks, ym) {
   return {
     ym,
     done: done.length,
-    hours: sum(done, (t) => t.real),
-    estDone: sum(done, (t) => t.est),
-    accuracy: estB ? sum(both, (t) => t.real) / estB : null,
+    hours: sum(done, (t) => t.hours),
+    ptsDone: sum(done, (t) => t.points),
+    hrsPerPt: hoursPerPoint(done),
     due: due.length,
-    dueHours: sum(due, (t) => t.est),
+    duePts: sum(due, (t) => t.points),
     onTime: dueDone.length ? (dueDone.filter((t) => t.completed <= t.due).length / dueDone.length) * 100 : null,
     people: new Set(done.map((t) => t.owner)).size,
     hoursByPerson: hoursBy('owner'),

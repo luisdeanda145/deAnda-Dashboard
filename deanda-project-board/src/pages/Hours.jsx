@@ -34,7 +34,7 @@ export default function Hours() {
 
   return (
     <>
-      <PageHead title="Hours" sub={`Real story points of Done tasks, credited to their Completed Date · ${fmtMonth(month)}`} />
+      <PageHead title="Hours" sub={`Hours of Done tasks, credited to their Completed Date · ${fmtMonth(month)}`} />
 
       <div className="stats">
         <Stat d={1} icon="clock" label="Hours logged this month" value={total} />

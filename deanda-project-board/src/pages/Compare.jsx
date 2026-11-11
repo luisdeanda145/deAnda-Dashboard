@@ -11,7 +11,7 @@ import { useApp } from '../lib/store'
 const KPIS = [
   { key: 'hours', label: 'Hours logged', icon: 'clock', fmt: hrs, unit: 'hrs' },
   { key: 'done', label: 'Tasks completed', icon: 'check', fmt: (v) => v },
-  { key: 'estDone', label: 'Story points done', icon: 'target', fmt: hrs, unit: 'hrs est.' },
+  { key: 'ptsDone', label: 'Story points done', icon: 'target', fmt: hrs },
   { key: 'due', label: 'Tasks due', icon: 'calendar', fmt: (v) => v },
   { key: 'onTime', label: 'Done on time', icon: 'flag', fmt: (v) => (v == null ? '—' : `${Math.round(v)}%`), points: true },
   { key: 'people', label: 'People active', icon: 'users', fmt: (v) => v },

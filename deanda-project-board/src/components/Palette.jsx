@@ -3,6 +3,7 @@ import Icon from './Icon'
 import { Avatar } from './ui'
 import { PILLARS, TEAM } from '../data/board'
 import { PAGES } from '../data/pages'
+import { fmtDay } from '../lib/format'
 import { isOpen } from '../lib/selectors'
 import { useApp } from '../lib/store'
 
@@ -31,7 +32,7 @@ export default function Palette({ onClose }) {
         },
       })),
       ...PILLARS.map((p) => ({ group: 'Pillars', key: `l-${p.name}`, icon: 'layers', label: p.name, hint: p.blurb, run: () => go('pillars') })),
-      ...tasks.map((t) => ({ group: 'Tasks', key: `t-${t.id}`, icon: t.status === 'Done' ? 'check' : 'circle', label: t.title, hint: `${t.owner} · ${t.status}`, run: () => openTask(t), swap: true })),
+      ...tasks.map((t) => ({ group: 'Tasks', key: `t-${t.id}`, icon: t.status === 'Done' ? 'check' : 'circle', label: t.title, hint: `${t.owner} · ${t.status} · ${t.status === 'Done' ? `done ${fmtDay(t.completed)}` : `due ${fmtDay(t.due)}`}`, run: () => openTask(t), swap: true })),
     ]
     const s = q.trim().toLowerCase()
     if (!s) return all.filter((i) => i.group === 'Pages' || i.group === 'Actions')

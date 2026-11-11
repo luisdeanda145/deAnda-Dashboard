@@ -18,8 +18,8 @@
      status:     'Not started'|'In progress'|'Blocked'|'Done'
      due:        'YYYY-MM-DD' | null
      completed:  'YYYY-MM-DD' | null
-     est:        number | null   // Est. Story Points (hrs)
-     real:       number | null   // Real Story Points (hrs)
+     points:     number | null   // Story points: effort, not time (1, 2, 3, 5, 8, 13)
+     hours:      number | null   // Hours worked on it
      notes:      string | null
    }
    ============================================================ */

@@ -17,11 +17,11 @@ npm run build    # production build into dist/
 | Page | What it is in the spreadsheet |
 | --- | --- |
 | **Overview** | Overview tab: team summary, story points done %, open items, status mix, pillar load, daily hours |
-| **My Work** | A personal tab: Open tasks, Done this month, Est. hours still open, Real hours this month, plus the to-do list grouped by due date. Switch person from the pill at the top. |
-| **Board** | Kanban by status. Drag a card to change its status. Dropping on Done stamps today's Completed Date and asks for real hours. |
+| **My Work** | A personal tab: Open tasks, Done this month, Story points still open, Hours this month, plus the to-do list grouped by due date. Switch person from the pill at the top. |
+| **Board** | Kanban by status. Drag a card to change its status. Dropping on Done stamps today's Completed Date and asks for the hours it took. |
 | **All Tasks** | The ToDo Feed: every row from every tab, sortable, searchable, filterable, exportable to CSV |
 | **Pillars** | Each pillar tab, its By Workstream breakdown and open work |
-| **Team** | By Person: hours, completion, blocked, and how real hours compare with estimates |
+| **Team** | By Person: hours, story points, completion, blocked, and hours per story point |
 | **Hours** | Daily Hours Tracker as a heat map, plus hours by pillar |
 | **Compare** | Month over month: pick any two months and compare hours logged, tasks completed and due, on-time rate, and the By Person / By Pillar breakdowns, plus a six-month hours trend. Work is credited by Completed Date and Due Date, so earlier months fill in as the board accumulates history. |
 | **Insights** | Estimate vs actual, due-date health, priority mix, and data hygiene (rows the sheet's formulas can't count) |
@@ -29,6 +29,8 @@ npm run build    # production build into dist/
 | **How It Works** | The sheet's rules for the team |
 
 Add team members from **Team** or **Settings**, and pillars and workstreams from **Pillars** or **Settings**. A person, pillar or workstream can only be removed once no task points at it. These edits are saved in the browser (`src/lib/directory.js`) until the backend is connected.
+
+Each task has **Story points** (effort: 1, 2, 3, 5, 8, 13) and **Hours** (time it actually took). Hours count toward Hours Logged once the task is Done with a Completed Date. Every task shows its due date, and once Done its completed date too.
 
 Click any task anywhere to edit every column of its row. `N` adds a task, `⌘K` searches tasks, people and pillars.
 
@@ -51,5 +53,6 @@ All reads and writes go through **`src/lib/api.js`** (`fetchTasks`, `createTask`
 
 - Rows come from the seven personal tabs (rows 14 and below), which is what the ToDo Feed stacks.
 - Text dates such as `10-Nov-26` were converted to ISO dates. `TBD` became no date.
+- The sheet's Real Story Points became **Hours**. Its Est. Story Points (an hour estimate) were dropped; **Story points** start empty and are filled in per task.
 - Tasks with no status count as **Not started** (they already counted as open on the sheet). One `done` was normalised to `Done`.
 - Team roles under each name are worked out from each person's top pillars, not typed in.
