@@ -7,14 +7,14 @@ import { byPillar, byWorkstream, isOpen } from '../lib/selectors'
 import { useApp } from '../lib/store'
 import DateGroups from '../components/DateGroups'
 
-const SORTS = ['Open', 'Hours', 'A–Z']
+const SORTS = ['Open', 'Hours']
 
 /** One tab per pillar, as on the sheet: progress, workstreams and the open work. */
 export default function Pillars() {
   const { tasks, openTask, manage } = useApp()
   const [sort, setSort] = useState('Open')
   const all = byPillar(tasks)
-  const list = [...all].sort((a, b) => (sort === 'Open' ? b.open - a.open : sort === 'Hours' ? b.hours - a.hours : a.name.localeCompare(b.name)))
+  const list = [...all].sort((a, b) => (sort === 'Open' ? b.open - a.open : b.hours - a.hours))
   const [pick, setPick] = useState(() => [...all].sort((a, b) => b.open - a.open)[0].name)
   const p = all.find((x) => x.name === pick) || all[0] // the picked pillar may have been removed
   const ws = byWorkstream(tasks, p.name)
