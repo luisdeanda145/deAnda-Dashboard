@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AppContext } from './lib/store'
-import { BOARD_MONTH, USER, applyDirectory } from './data/board'
+import { USER, applyDirectory } from './data/board'
 import { codeFor, loadDirectory, same, saveDirectory } from './lib/directory'
 import * as api from './lib/api'
-import { todayISO } from './lib/format'
+import { currentMonth, todayISO } from './lib/format'
 import { DEFAULTS } from './lib/settings'
 import Environment from './components/Environment'
 import Sidebar from './components/Sidebar'
@@ -54,6 +54,19 @@ function loadSettings() {
   }
 }
 
+/* The reporting month is the current calendar month. A month picked in Settings
+   is remembered until the calendar month ends, then the board moves on by itself. */
+const MONTH_KEY = 'dac-board-month'
+function loadMonth() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(MONTH_KEY) || 'null')
+    if (saved && saved.chosenIn === currentMonth() && /^\d{4}-\d{2}$/.test(saved.month)) return saved.month
+  } catch {
+    /* storage unavailable: use the calendar */
+  }
+  return currentMonth()
+}
+
 const pageFromHash = () => {
   const id = location.hash.replace(/^#\/?/, '')
   return VIEWS[id] ? id : 'overview'
@@ -72,7 +85,38 @@ export default function App() {
 
   /* ---------------- board state ---------------- */
   const [tasks, setTasks] = useState(api.initialTasks)
-  const [month, setMonth] = useState(BOARD_MONTH)
+  const [month, setMonthState] = useState(loadMonth)
+  const setMonth = useCallback((m) => {
+    setMonthState(m)
+    try {
+      localStorage.setItem(MONTH_KEY, JSON.stringify({ month: m, chosenIn: currentMonth() }))
+    } catch {
+      /* the choice then lasts for this visit */
+    }
+  }, [])
+
+  /* "today" moves on at midnight even with the page left open (or a laptop asleep):
+     check once a minute and when the window comes back; a new day re-draws every view */
+  const [today, setToday] = useState(todayISO)
+  const todayRef = useRef(today)
+  useEffect(() => {
+    const check = () => {
+      const t = todayISO()
+      if (t === todayRef.current) return
+      const newMonth = t.slice(0, 7) !== todayRef.current.slice(0, 7)
+      todayRef.current = t
+      setToday(t)
+      if (newMonth) setMonthState(loadMonth())
+    }
+    const id = setInterval(check, 60000)
+    addEventListener('focus', check)
+    document.addEventListener('visibilitychange', check)
+    return () => {
+      clearInterval(id)
+      removeEventListener('focus', check)
+      document.removeEventListener('visibilitychange', check)
+    }
+  }, [])
   const [me, setMe] = useState(USER.name) // whose tab My Work shows
   const [preset, setPreset] = useState(null) // a filter handed to All Tasks
 
@@ -288,6 +332,7 @@ export default function App() {
       openTask,
       month,
       setMonth,
+      today,
       me,
       setMe,
       preset,
@@ -301,7 +346,7 @@ export default function App() {
       removeWorkstream,
       manage: (what, extra) => setSheet({ manage: what, ...extra }),
     }),
-    [page, go, settings, set, toast, spatial, side, right, tasks, addTask, patchTask, removeTask, toggleDone, openTask, month, me, preset, dir, addPerson, removePerson, addPillar, removePillar, addWorkstream, removeWorkstream],
+    [page, go, settings, set, toast, spatial, side, right, tasks, addTask, patchTask, removeTask, toggleDone, openTask, month, setMonth, today, me, preset, dir, addPerson, removePerson, addPillar, removePillar, addWorkstream, removeWorkstream],
   )
 
   const View = VIEWS[page]

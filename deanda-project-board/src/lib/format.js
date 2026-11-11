@@ -50,11 +50,13 @@ export const addDays = (s, n) => {
 }
 export const diffDays = (a, b) => Math.round((parse(a) - parse(b)) / 86400000)
 
-/** "Nov 10" */
+const thisYear = () => new Date().getFullYear()
+
+/** "Nov 10"; dates in another year carry it: "Nov 10, 2025" */
 export const fmtDay = (s) => {
   if (!s) return '—'
   const d = parse(s)
-  return `${MONTHS[d.getMonth()]} ${d.getDate()}`
+  return `${MONTHS[d.getMonth()]} ${d.getDate()}${d.getFullYear() === thisYear() ? '' : `, ${d.getFullYear()}`}`
 }
 /** "Tue" */
 export const dow = (s) => DOW[parse(s).getDay()]
@@ -64,6 +66,10 @@ export const fmtMonth = (ym) => {
   return `${LONG[m - 1]} ${y}`
 }
 export const shortMonth = (ym) => MONTHS[Number(ym.split('-')[1]) - 1]
+/** "Nov", or "Jan '27" for a month in another year */
+export const monthTick = (ym) => (Number(ym.slice(0, 4)) === thisYear() ? shortMonth(ym) : `${shortMonth(ym)} '${ym.slice(2, 4)}`)
+/** The calendar month today falls in, "2026-11" */
+export const currentMonth = () => todayISO().slice(0, 7)
 export const daysInMonth = (ym) => {
   const [y, m] = ym.split('-').map(Number)
   return new Date(y, m, 0).getDate()
@@ -75,11 +81,16 @@ export const inMonth = (s, ym) => !!s && s.startsWith(ym)
 export const weekStart = (s) => addDays(s, -((parse(s).getDay() + 6) % 7))
 export const sameWeek = (a, b) => weekStart(a) === weekStart(b)
 
-/** "Nov 9 – 15", or "Oct 26 – Nov 1" across a month end */
+/** "Nov 9 – 15", "Oct 26 – Nov 1" across a month end, with the year when it isn't this year */
 export function fmtRange(a, b) {
   const x = parse(a)
   const y = parse(b)
-  return x.getMonth() === y.getMonth() ? `${MONTHS[x.getMonth()]} ${x.getDate()} – ${y.getDate()}` : `${fmtDay(a)} – ${fmtDay(b)}`
+  if (x.getMonth() === y.getMonth() && x.getFullYear() === y.getFullYear()) {
+    const yr = x.getFullYear() === thisYear() ? '' : `, ${x.getFullYear()}`
+    return `${MONTHS[x.getMonth()]} ${x.getDate()} – ${y.getDate()}${yr}`
+  }
+  /* across a month or year end, each date carries its year only when it isn't this year */
+  return `${fmtDay(a)} – ${fmtDay(b)}`
 }
 
 /** "Wed, Nov 11" */

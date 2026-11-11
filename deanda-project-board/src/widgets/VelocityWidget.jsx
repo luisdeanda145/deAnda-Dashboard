@@ -33,7 +33,7 @@ export default function VelocityWidget() {
       </CardHead>
       <strong className="figure">{Math.round(shown)}</strong>
       <p className="sub">
-        {last} today <Trend value={avg ? ((last - avg) / avg) * 100 : 0} digits={0} /> <span className="faint">vs daily avg</span>
+        {last} {today.startsWith(month) ? 'today' : `on ${mon} ${upto}`} <Trend value={avg ? ((last - avg) / avg) * 100 : 0} digits={0} /> <span className="faint">vs daily avg</span>
       </p>
       <AreaLine key={who} points={points} ticks={ticks} label={(i) => `${mon} ${i + 1}`} fmt={(v) => `${v} closed`} />
     </section>

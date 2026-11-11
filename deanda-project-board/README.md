@@ -32,6 +32,8 @@ Add team members from **Team** or **Settings**, and pillars and workstreams from
 
 Each task has **Story points** (effort: 1, 2, 3, 5, 8, 13) and **Hours** (time it actually took). Hours count toward Hours Logged once the task is Done with a Completed Date. Every task shows its due date, and once Done its completed date too; labels always carry the date ("Today · Nov 11", "Fri, Nov 13", "2d late · Nov 9"). Completed tasks carry a teal edge and a Completed badge everywhere. All Tasks, sorted by Date, breaks into a heading row per day.
 
+Everything date-based is worked out from today's date each time the page draws, so sections, week ranges and the reporting month move on by themselves, including at midnight with the page left open. Dates outside the current year show their year ("Nov 3, 2025").
+
 Click any task anywhere to edit every column of its row. `N` adds a task, `⌘K` searches tasks, people and pillars.
 
 ## Connecting the backend
@@ -43,7 +45,7 @@ All reads and writes go through **`src/lib/api.js`** (`fetchTasks`, `createTask`
 | Signed-in user | `USER` in `src/data/board.js` |
 | Default team, statuses, priorities, pillars, workstreams (the Lists tab) | `src/data/board.js` |
 | Team, pillars and workstreams as edited in the app | `src/lib/directory.js` (localStorage today) |
-| Reporting month | `BOARD_MONTH` in `src/data/board.js` (also changeable in Settings) |
+| Reporting month | Follows the calendar month (`loadMonth` in `src/App.jsx`). A month picked in Settings holds until the calendar month ends. |
 | The sheet's formulas (summary, by person, by pillar, by workstream, daily hours) | `src/lib/selectors.js` |
 | Imported tasks (538 rows from the personal tabs) | `src/data/tasks.json` |
 | Background photo | `public/background.jpg` |

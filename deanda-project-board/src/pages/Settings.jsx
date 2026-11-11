@@ -2,7 +2,7 @@ import Icon from '../components/Icon'
 import { Avatar, PageHead, Switch } from '../components/ui'
 import { DEFAULTS } from '../lib/settings'
 import { PILLARS, TEAM, USER, WORKSTREAMS } from '../data/board'
-import { fmtMonth } from '../lib/format'
+import { currentMonth, fmtMonth } from '../lib/format'
 import { focusOf } from '../lib/selectors'
 import { useApp } from '../lib/store'
 
@@ -51,14 +51,24 @@ export default function Settings() {
           <div className="set-row">
             <div>
               <b>Reporting month</b>
-              <small>Hours and “done this month” use {fmtMonth(month)}</small>
+              <small>
+                Hours and “done this month” use {fmtMonth(month)}.{' '}
+                {month === currentMonth() ? 'Follows the calendar.' : `Back to ${fmtMonth(currentMonth())} when this month ends.`}
+              </small>
             </div>
-            <input type="month" className="date-in" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} />
+            <span className="month-pick">
+              {month !== currentMonth() && (
+                <button type="button" className="chip sm-chip" onClick={() => setMonth(currentMonth())}>
+                  This month
+                </button>
+              )}
+              <input type="month" className="date-in" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} />
+            </span>
           </div>
           <div className="set-row">
             <div>
               <b>Data source</b>
-              <small>{tasks.length} tasks from Project_Board_Nov_2026.xlsx, kept in memory</small>
+              <small>{tasks.length} tasks, first imported from Project_Board_Nov_2026.xlsx; changes are kept in memory until the backend is connected</small>
             </div>
             <span className="status tone-amber">Local</span>
           </div>

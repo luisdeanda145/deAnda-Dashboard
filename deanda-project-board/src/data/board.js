@@ -16,8 +16,8 @@ export const WORKSPACE = {
   sub: 'Project Board',
 }
 
-/** The month the board reports on (the Overview's "Month" cell). */
-export const BOARD_MONTH = '2026-11'
+/* The month the board reports on (the Overview's "Month" cell) follows the
+   calendar; see the reporting-month state in src/App.jsx. */
 
 /* ------------------------------------------------------------
    Team, pillars and workstreams can be edited from the app

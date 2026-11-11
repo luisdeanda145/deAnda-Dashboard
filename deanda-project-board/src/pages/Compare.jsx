@@ -3,7 +3,7 @@ import Icon from '../components/Icon'
 import { MonthBars } from '../components/Charts'
 import { Avatar, CardHead, PageHead, Segmented, Select } from '../components/ui'
 import { PILLARS, TEAM } from '../data/board'
-import { fmtMonth, hrs, shortMonth } from '../lib/format'
+import { fmtMonth, hrs, monthTick } from '../lib/format'
 import { monthStats, monthsWithData, shiftMonth } from '../lib/selectors'
 import { useApp } from '../lib/store'
 
@@ -55,10 +55,10 @@ function Breakdown({ by, icon, rows, a, b, metric, setMetric, renderName }) {
               <th>{by === 'Person' ? 'Owner' : 'Pillar'}</th>
               <th className="cmp-bars-h">
                 <span>
-                  <i className="dot blue" /> {shortMonth(a.ym)}
+                  <i className="dot blue" /> {monthTick(a.ym)}
                 </span>
                 <span>
-                  <i className="ring" /> {shortMonth(b.ym)}
+                  <i className="ring" /> {monthTick(b.ym)}
                 </span>
               </th>
               <th className="num">{fmtMonth(a.ym)}</th>
@@ -120,7 +120,7 @@ export default function Compare() {
   const trend = Array.from({ length: 6 }, (_, i) => {
     const ym = shiftMonth(a, i - 5)
     const s = monthStats(tasks, ym)
-    return { m: shortMonth(ym), ym, open: 0, closed: s.hours, done: s.done }
+    return { m: monthTick(ym), ym, open: 0, closed: s.hours, done: s.done }
   })
 
   const people = [...new Set([...TEAM.map((p) => p.name), ...Object.keys(sa.hoursByPerson), ...Object.keys(sb.hoursByPerson)])]
