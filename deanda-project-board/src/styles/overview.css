@@ -660,10 +660,13 @@
 }
 
 /* the light-blue sky card
-   A pale sky gradient with three pools of light that wander and breathe
-   on out-of-step loops (12s, 15s, 18s), plus a sheen that crosses every
-   7s. Every layer is a plain gradient moved with transform
-   and opacity only, so it never repaints: the GPU just slides it. */
+   A pale sky-blue gradient with seven soft clouds of colour that drift
+   through it like powder dispersing in water. Each cloud combines three
+   motions on separate loops (a wandering path, a slow swirl around an
+   off-centre point, and a stretch), with different lengths per cloud,
+   so the pattern never visibly repeats. The paths come from CLOUDS in
+   src/widgets/HoursWidget.jsx. Only translate, rotate and scale are
+   animated, so the page never repaints for it: the GPU just moves layers. */
 .contacts {
   flex-shrink: 0;
 }
@@ -681,80 +684,47 @@
   pointer-events: none;
   animation: skyIn 1.6s var(--ease) 0.6s backwards;
 }
-.sky i {
+.cloud {
   position: absolute;
-  display: block;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+  height: var(--h);
   border-radius: 50%;
-  will-change: transform;
+  background: radial-gradient(closest-side, var(--c), transparent);
+  transform-origin: var(--o);
+  will-change: translate, rotate, scale;
+  animation:
+    wander var(--dt) ease-in-out infinite,
+    swirl var(--ot) linear infinite var(--dir),
+    stretch var(--bt) ease-in-out infinite alternate;
 }
-/* a bright, almost white pool high on the left */
-.sky-a {
-  width: 120%;
-  height: 90%;
-  left: -40%;
-  top: -42%;
-  background: radial-gradient(closest-side, rgb(240 250 255 / 0.95), rgb(196 230 255 / 0.42) 55%, transparent);
-  animation: skyA 12s ease-in-out infinite;
-}
-/* a cyan pool lower right */
-.sky-b {
-  width: 110%;
-  height: 85%;
-  right: -45%;
-  top: 22%;
-  background: radial-gradient(closest-side, rgb(150 244 255 / 0.9), rgb(120 214 255 / 0.36) 60%, transparent);
-  animation: skyB 15s ease-in-out infinite;
-}
-/* a deeper periwinkle pool along the bottom keeps the white pills legible */
-.sky-c {
-  width: 130%;
-  height: 70%;
-  left: -15%;
-  bottom: -38%;
-  background: radial-gradient(closest-side, rgb(48 76 220 / 0.7), transparent);
-  animation: skyC 18s ease-in-out infinite;
-}
-/* a diagonal glint that crosses every 7s */
-.sky-sheen {
-  inset: -20% auto -20% 0;
-  width: 38%;
-  border-radius: 0 !important;
-  background: linear-gradient(100deg, transparent, rgb(255 255 255 / 0.22) 42%, rgb(255 255 255 / 0.42) 50%, rgb(255 255 255 / 0.22) 58%, transparent);
-  transform: translateX(-140%) skewX(-14deg);
-  animation: skySheen 7s ease-in-out 2s infinite;
-}
-/* each pool wanders a loop rather than sliding back and forth */
-@keyframes skyA {
-  33% {
-    transform: translate(42%, 28%) scale(1.25);
-  }
-  66% {
-    transform: translate(10%, 52%) scale(0.9);
-  }
-}
-@keyframes skyB {
-  33% {
-    transform: translate(-48%, -34%) scale(0.85);
-  }
-  66% {
-    transform: translate(-20%, -58%) scale(1.2);
-  }
-}
-@keyframes skyC {
-  33% {
-    transform: translate(26%, -22%) scale(1.2);
-  }
-  66% {
-    transform: translate(-18%, -10%) scale(0.92);
-  }
-}
-@keyframes skySheen {
+@keyframes wander {
   0%,
-  45% {
-    transform: translateX(-140%) skewX(-14deg);
-  }
   100% {
-    transform: translateX(360%) skewX(-14deg);
+    translate: 0 0;
+  }
+  20% {
+    translate: var(--p1);
+  }
+  45% {
+    translate: var(--p2);
+  }
+  70% {
+    translate: var(--p3);
+  }
+  88% {
+    translate: var(--p4);
+  }
+}
+@keyframes swirl {
+  to {
+    rotate: 360deg;
+  }
+}
+@keyframes stretch {
+  to {
+    scale: var(--sx) var(--sy);
   }
 }
 @keyframes skyIn {
@@ -762,14 +732,14 @@
     opacity: 0;
   }
 }
-/* with animations off, the sky holds still rather than flickering */
+/* with animations off, the clouds hold still rather than flickering */
 [data-motion='off'] .sky,
-[data-motion='off'] .sky i {
+[data-motion='off'] .cloud {
   animation: none !important;
 }
 @media (prefers-reduced-motion: reduce) {
   .sky,
-  .sky i {
+  .cloud {
     animation: none !important;
   }
 }
