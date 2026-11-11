@@ -2,7 +2,7 @@ import { Fragment, useState } from 'react'
 import Icon from '../components/Icon'
 import { Avatar, PageHead, Prio, Segmented, Select, StatusPill, TaskDates } from '../components/ui'
 import { ALL_PILLARS, TEAM, pillarTone } from '../data/board'
-import { dayName, fmtDay, hrs, todayISO, weekName, weekStart } from '../lib/format'
+import { dayName, fmtDay, hrs, recencyRank, todayISO, weekName, weekStart } from '../lib/format'
 import { HYGIENE, isDone } from '../lib/selectors'
 import { useApp } from '../lib/store'
 
@@ -25,9 +25,10 @@ const CSV_COLS = ['owner', 'title', 'pillar', 'workstream', 'priority', 'status'
 const CSV_HEAD = ['Owner', 'Task', 'Pillar', 'Workstream', 'Priority', 'Status', 'Due Date', 'Completed Date', 'Story Points', 'Hours', 'Notes']
 const cell = (v) => (v == null ? '' : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v))
 
-/* the Dates column sorts by the date that matters: Completed Date once Done, Due Date before */
+/* the Date column sorts by the date that matters (Completed Date once Done, Due Date before),
+   today first, then the rest of this week, then older weeks, then weeks still to come */
 const dateOf = (t) => (isDone(t) ? t.completed : t.due)
-const valueOf = (t, by) => (by === 'due' ? dateOf(t) : t[by])
+const valueOf = (t, by) => (by === 'due' ? recencyRank(dateOf(t)) * 2 + (isDone(t) ? 1 : 0) : t[by]) // open before completed on the same day
 
 /** The ToDo Feed: every row from every personal tab in one sortable table. */
 export default function Tasks() {
@@ -87,15 +88,7 @@ export default function Tasks() {
 
       <div className="filter-bar rise" style={{ '--d': 1 }}>
         <div className="filters">
-          <Segmented
-            value={filter}
-            options={FILTERS}
-            onChange={(f) => {
-              setFilter(f)
-              /* completed work reads newest first; open work soonest first */
-              if (sort.by === 'due') setSort({ by: 'due', dir: f === 'Completed' ? -1 : 1 })
-            }}
-          />
+          <Segmented value={filter} options={FILTERS} onChange={setFilter} />
           <Select value={owner} options={[ANY_OWNER, ...TEAM.map((p) => p.name)]} onChange={setOwner} align="left" prefix={<Icon name="user" size={15} />} />
           <Select value={pillar} options={[ANY_PILLAR, ...ALL_PILLARS]} onChange={setPillar} align="left" prefix={<Icon name="layers" size={15} />} />
           {hygiene && (

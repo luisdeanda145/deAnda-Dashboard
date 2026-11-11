@@ -94,6 +94,19 @@ export function weekName(monday, today = todayISO()) {
   return null
 }
 
+/**
+ * Sort key that puts the present first and the past below it:
+ *   today → the rest of this week (soonest first, then earlier days)
+ *   → past weeks (most recent first) → future weeks (soonest first) → no date
+ */
+export function recencyRank(s, today = todayISO()) {
+  if (!s) return 5e6
+  const n = diffDays(s, today)
+  if (sameWeek(s, today)) return n >= 0 ? n : 100 - n
+  if (n < 0) return 1e6 - n
+  return 3e6 + n
+}
+
 /** A day's name relative to today, always with its date: "Today · Wed, Nov 11", "Thu, Nov 12" */
 export function dayName(s, today = todayISO()) {
   const n = diffDays(s, today)

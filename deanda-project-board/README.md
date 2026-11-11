@@ -17,7 +17,7 @@ npm run build    # production build into dist/
 | Page | What it is in the spreadsheet |
 | --- | --- |
 | **Overview** | Overview tab: team summary, story points done %, open items, status mix, pillar load, daily hours |
-| **My Work** | A personal tab: Open tasks, Done this month, Story points still open, Hours this month, plus the to-do list by week and by day: open work by Due Date (overdue days first, in red), completed work by Completed Date (newest first). Switch person from the pill at the top. |
+| **My Work** | A personal tab: Open tasks, Done this month, Story points still open, Hours this month, plus the to-do list by week and by day: open work by Due Date, completed work by Completed Date. Today is at the top, then the rest of this week, then older weeks the further you scroll; weeks still to come sit at the bottom under Coming up. Overdue days are red. Switch person from the pill at the top. |
 | **Board** | Kanban by status. Drag a card to change its status. Dropping on Done stamps today's Completed Date and asks for the hours it took. |
 | **All Tasks** | The ToDo Feed: every row from every tab, sortable, searchable, filterable, exportable to CSV |
 | **Pillars** | Each pillar tab, its By Workstream breakdown and open work |

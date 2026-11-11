@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { TaskRow } from './TaskRow'
-import { addDays, dayName, diffDays, fmtRange, todayISO, weekName, weekStart } from '../lib/format'
+import { addDays, dayName, diffDays, fmtRange, recencyRank, todayISO, weekName, weekStart } from '../lib/format'
 
 /** Groups tasks into weeks (Monday to Sunday) and days, by due date or completed date. */
-function group(list, key, newestFirst) {
+function group(list, key, today) {
   const weeks = new Map()
   const undated = []
   list.forEach((t) => {
@@ -15,14 +15,17 @@ function group(list, key, newestFirst) {
     if (!days.has(day)) days.set(day, [])
     days.get(day).push(t)
   })
-  const dir = newestFirst ? -1 : 1
   const byPrio = (a, b) => (a.priority || 'P9').localeCompare(b.priority || 'P9')
+  const rank = (day) => recencyRank(day, today)
+  /* this week first (today at the top), then older weeks going down, then weeks still to come */
+  const weekRank = (monday) => (monday === weekStart(today) ? -1 : rank(monday))
   return {
     weeks: [...weeks.entries()]
-      .sort(([a], [b]) => a.localeCompare(b) * dir)
+      .sort(([a], [b]) => weekRank(a) - weekRank(b))
       .map(([monday, days]) => ({
         monday,
-        days: [...days.entries()].sort(([a], [b]) => a.localeCompare(b) * dir).map(([day, tasks]) => ({ day, tasks: tasks.sort(byPrio) })),
+        future: monday > weekStart(today),
+        days: [...days.entries()].sort(([a], [b]) => rank(a) - rank(b)).map(([day, tasks]) => ({ day, tasks: tasks.sort(byPrio) })),
       })),
     undated: undated.sort(byPrio),
   }
@@ -30,14 +33,16 @@ function group(list, key, newestFirst) {
 
 /**
  * A task list sectioned by week, then by day. Every heading names its date.
- *   mode 'open' → by Due Date, oldest first, so overdue days lead
- *   mode 'done' → by Completed Date, newest first
+ * Today sits at the top, then the rest of this week, then older weeks the
+ * further down you go; weeks still to come close the list under "Coming up".
+ *   mode 'open' → by Due Date
+ *   mode 'done' → by Completed Date
  */
 export default function DateGroups({ tasks, mode = 'open', showOwner, limit = 60, d0 = 6 }) {
   const [cap, setCap] = useState(limit)
   const today = todayISO()
   const done = mode === 'done'
-  const { weeks, undated } = group(tasks, done ? 'completed' : 'due', done)
+  const { weeks, undated } = group(tasks, done ? 'completed' : 'due', today)
   let shown = 0
   let d = d0
 
@@ -52,8 +57,17 @@ export default function DateGroups({ tasks, mode = 'open', showOwner, limit = 60
   }
 
   const sections = []
+  let upcoming = false
   for (const w of weeks) {
     if (shown >= cap) break
+    if (w.future && !upcoming) {
+      upcoming = true
+      sections.push(
+        <p key="coming-up" className="coming-up rise" style={{ '--d': d++ }}>
+          Coming up
+        </p>,
+      )
+    }
     const sunday = addDays(w.monday, 6)
     const name = weekName(w.monday, today)
     const count = w.days.reduce((a, x) => a + x.tasks.length, 0)
