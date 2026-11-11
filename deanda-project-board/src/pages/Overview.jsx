@@ -69,7 +69,7 @@ function PointsCard({ s, ipSP }) {
   const ip = s.planned ? (ipSP / s.planned) * 100 : 0
   const none = s.planned === 0
   return (
-    <article className="card kpi-card hl rise" style={{ '--d': 1 }}>
+    <article className="card kpi-card hl rise" style={{ '--d': 5 }}>
       <CardHead title="Story Points Done" />
       <div className="kpi">
         <strong className="figure">{none ? '—' : `${pct.toFixed(1)}%`}</strong>
@@ -98,7 +98,7 @@ function OpenCard({ s }) {
   const a = (s.inProgress / o) * 100
   const b = a + (s.notStarted / o) * 100
   return (
-    <article className="card kpi-card hl rise" style={{ '--d': 2 }}>
+    <article className="card kpi-card hl rise" style={{ '--d': 6 }}>
       <CardHead title="Open Items" />
       <div className="kpi">
         <strong className="figure">{Math.round(n)}</strong>
@@ -129,7 +129,7 @@ function StatusCard({ tasks }) {
     .map((st) => ({ id: st.id, label: st.id, tone: st.tone, value: list.filter((t) => t.status === st.id).length }))
     .filter((d) => d.value > 0)
   return (
-    <article className="card hl rise" style={{ '--d': 3 }}>
+    <article className="card hl rise" style={{ '--d': 2 }}>
       <CardHead title="Status Mix">
         <Select value={range} options={STATUS_RANGES} onChange={setRange} />
       </CardHead>
@@ -168,7 +168,7 @@ function PillarCard({ tasks }) {
     { name: `${rest.length} other pillars`, tone: 'hatch', share: Math.round((restV / total) * 100), count: restV },
   ]
   return (
-    <article className="card hl rise" style={{ '--d': 4 }}>
+    <article className="card hl rise" style={{ '--d': 3 }}>
       <CardHead title="Pillar Load">
         <span className="faint-note">All tasks · {fmtMonth(month)}</span>
       </CardHead>
@@ -200,12 +200,12 @@ export default function Overview() {
     <div className="overview">
       <Header />
       <div className="ov-grid">
-        <PointsCard s={s} ipSP={ipSP} />
-        <OpenCard s={s} />
+        <DailyHoursTracker tasks={tasks} month={month} delay={1} />
         <StatusCard tasks={tasks} />
         <PillarCard tasks={tasks} />
-        <DailyHoursTracker tasks={tasks} month={month} delay={5} />
-        <WhereHoursWent tasks={tasks} month={month} delay={6} />
+        <WhereHoursWent tasks={tasks} month={month} delay={4} />
+        <PointsCard s={s} ipSP={ipSP} />
+        <OpenCard s={s} />
       </div>
     </div>
   )
