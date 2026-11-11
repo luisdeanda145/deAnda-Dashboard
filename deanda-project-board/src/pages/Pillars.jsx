@@ -20,6 +20,7 @@ export default function Pillars() {
   const ws = byWorkstream(tasks, p.name)
   const wsMax = Math.max(1, ...ws.map((w) => w.planned))
   const open = p.tasks.filter(isOpen)
+  const doneCount = p.tasks.length - open.length
   const pct = p.planned ? (p.completed / p.planned) * 100 : 0
 
   return (
@@ -140,13 +141,16 @@ export default function Pillars() {
 
           <section className="task-group">
             <h2 className="rise" style={{ '--d': 4 }}>
-              Open work <span>{open.length}</span>
+              Tasks <span>{p.tasks.length}</span>
+              <small className="h2-note">
+                {open.length} open · {doneCount} completed
+              </small>
               <button type="button" className="chip sm-chip" onClick={() => openTask({ pillar: p.name })}>
                 <Icon name="plus" size={14} stroke={2.2} /> Add to {p.name}
               </button>
             </h2>
-            <DateGroups key={p.name} tasks={open} mode="open" showOwner limit={40} d0={5} />
-            {open.length === 0 && <p className="muted-line">Everything on this pillar is done.</p>}
+            <DateGroups key={p.name} tasks={p.tasks} mode="all" showOwner limit={40} d0={5} />
+            {p.tasks.length === 0 && <p className="muted-line">No tasks on this pillar yet.</p>}
           </section>
         </div>
       </div>

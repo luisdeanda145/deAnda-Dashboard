@@ -8,10 +8,10 @@ const OVERDUE_FOLD = 6 // more overdue tasks than this start folded to one line
 const byPrio = (a, b) => (a.priority || 'P9').localeCompare(b.priority || 'P9')
 
 /** day → its tasks, sorted by day in the given direction */
-function daysOf(list, key, dir) {
+function daysOf(list, at, dir) {
   const map = new Map()
   list.forEach((t) => {
-    const d = t[key]
+    const d = at(t)
     if (!map.has(d)) map.set(d, [])
     map.get(d).push(t)
   })
@@ -41,38 +41,49 @@ const weekTitle = (monday, today, prefix) => {
  * Open work runs forward: Today, Overdue (most recent first), the rest of
  * this week, next week, later weeks, no date.
  * Completed work runs back: Today, earlier this week, last week, older weeks.
+ * Both together ('all') make one timeline: Today, Overdue, the weeks ahead,
+ * then the weeks behind, where completed work sits.
  */
-function sectionsFor(tasks, done, today) {
-  const key = done ? 'completed' : 'due'
-  const dated = tasks.filter((t) => t[key])
-  const undated = tasks.filter((t) => !t[key]).sort(byPrio)
+function sectionsFor(tasks, mode, today) {
+  const isDone = (t) => t.status === 'Done'
+  const at = mode === 'done' ? (t) => t.completed : mode === 'open' ? (t) => t.due : (t) => (isDone(t) ? t.completed : t.due)
+  const dated = tasks.filter(at)
+  const undated = tasks.filter((t) => !at(t)).sort(byPrio)
   const thisWeek = weekStart(today)
+  const done = mode === 'done'
   const out = []
 
-  const todays = dated.filter((t) => t[key] === today)
+  const todays = dated.filter((t) => at(t) === today)
   if (todays.length) out.push({ id: 'today', title: 'Today', sub: fmtDow(today), tone: 'today', days: [{ day: today, tasks: todays.sort(byPrio), bare: true }] })
 
   if (done) {
-    const past = daysOf(dated.filter((t) => t[key] < today), key, -1)
+    const past = daysOf(dated.filter((t) => at(t) < today), at, -1)
     weeksOf(past).forEach((w) => {
       const head = w.monday === thisWeek ? { title: 'Earlier this week', sub: fmtRange(w.monday, addDays(w.monday, 6)) } : weekTitle(w.monday, today)
       out.push({ id: w.monday, ...head, days: w.days })
     })
-    const ahead = daysOf(dated.filter((t) => t[key] > today), key, 1)
+    const ahead = daysOf(dated.filter((t) => at(t) > today), at, 1)
     if (ahead.length) out.push({ id: 'future', title: 'Completed date in the future', sub: 'Check these dates', tone: 'warn', days: ahead })
     if (undated.length) out.push({ id: 'undated', title: 'No completed date', days: [{ day: null, tasks: undated, bare: true }] })
     return out
   }
 
-  const overdue = daysOf(dated.filter((t) => t[key] < today), key, -1)
+  const overdue = daysOf(dated.filter((t) => !isDone(t) && at(t) < today), at, -1)
   if (overdue.length) out.push({ id: 'overdue', title: 'Overdue', sub: 'most recent first', tone: 'late', fold: true, days: overdue })
 
-  const ahead = daysOf(dated.filter((t) => t[key] > today), key, 1)
+  const ahead = daysOf(dated.filter((t) => at(t) > today), at, 1)
   weeksOf(ahead).forEach((w) => {
     const head = w.monday === thisWeek ? { title: 'Rest of this week', sub: fmtRange(addDays(today, 1), addDays(w.monday, 6)) } : weekTitle(w.monday, today)
-    out.push({ id: w.monday, ...head, days: w.days })
+    out.push({ id: `ahead-${w.monday}`, ...head, days: w.days })
   })
-  if (undated.length) out.push({ id: 'undated', title: 'No due date', days: [{ day: null, tasks: undated, bare: true }] })
+
+  /* in the combined timeline, completed work before today follows, most recent first */
+  const behind = daysOf(dated.filter((t) => isDone(t) && at(t) < today), at, -1)
+  weeksOf(behind).forEach((w) => {
+    const head = w.monday === thisWeek ? { title: 'Earlier this week', sub: fmtRange(w.monday, addDays(today, -1)) } : weekTitle(w.monday, today)
+    out.push({ id: `behind-${w.monday}`, ...head, days: w.days })
+  })
+  if (undated.length) out.push({ id: 'undated', title: mode === 'open' ? 'No due date' : 'No date', days: [{ day: null, tasks: undated, bare: true }] })
   return out
 }
 
@@ -80,11 +91,11 @@ function sectionsFor(tasks, done, today) {
  * A task list sectioned from today outwards, then by day. Every heading names its date.
  *   mode 'open' → by Due Date, forward in time
  *   mode 'done' → by Completed Date, back in time
+ *   mode 'all'  → both in one timeline (Completed Date for done work, Due Date otherwise)
  */
 export default function DateGroups({ tasks, mode = 'open', showOwner, limit = 60, d0 = 6 }) {
   const today = todayISO()
-  const done = mode === 'done'
-  const sections = sectionsFor(tasks, done, today)
+  const sections = sectionsFor(tasks, mode, today)
   const overdueCount = sections.find((s) => s.id === 'overdue')?.days.reduce((a, x) => a + x.tasks.length, 0) || 0
   const [unfolded, setUnfolded] = useState(overdueCount <= OVERDUE_FOLD)
   const [cap, setCap] = useState(limit)
@@ -130,7 +141,7 @@ export default function DateGroups({ tasks, mode = 'open', showOwner, limit = 60
               s.days.map(({ day, tasks: list, bare }) => {
                 if (shown >= cap) return null
                 if (bare) return <ul key={day || 'none'}>{rows(list)}</ul>
-                const late = !done && day < today
+                const late = s.id === 'overdue'
                 return (
                   <div key={day} className="day-group">
                     <h3 className={`rise${late ? ' late' : ''}`} style={{ '--d': d++ }}>
