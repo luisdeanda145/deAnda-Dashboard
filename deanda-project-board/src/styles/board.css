@@ -2189,3 +2189,10 @@
   color: var(--ink);
   font-weight: 600;
 }
+
+/* the New task sheet is solid, so nothing behind it shows through */
+.sheet.task-sheet.is-new {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 40%),
+    rgb(42 37 33);
+}

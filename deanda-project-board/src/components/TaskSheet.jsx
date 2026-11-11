@@ -95,7 +95,7 @@ export default function TaskSheet({ task, hint, onClose }) {
 
   return (
     <div className="sheet-wrap" onPointerDown={(e) => e.target === e.currentTarget && onClose()}>
-      <form className="sheet task-sheet" role="dialog" aria-label={isNew ? 'New task' : 'Edit task'} onSubmit={save} onKeyDown={(e) => e.key === 'Escape' && !e.currentTarget.querySelector('.select.open') && onClose()}>
+      <form className={`sheet task-sheet${isNew ? ' is-new' : ''}`} role="dialog" aria-label={isNew ? 'New task' : 'Edit task'} onSubmit={save} onKeyDown={(e) => e.key === 'Escape' && !e.currentTarget.querySelector('.select.open') && onClose()}>
         <header>
           <span className="tu-ic">
             <Icon name={isNew ? 'plus' : 'edit'} size={21} />
