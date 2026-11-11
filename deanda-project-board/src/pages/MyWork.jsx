@@ -1,60 +1,18 @@
 import { useState } from 'react'
 import Icon from '../components/Icon'
-import { Avatar, PageHead, Prio, Segmented, Select, Stat, StatusPill, TaskDates } from '../components/ui'
-import { TEAM, USER, pillarTone } from '../data/board'
-import { fmtMonth, hrs, pts, todayISO } from '../lib/format'
-import { BUCKETS, dueBucket, isDone, personal } from '../lib/selectors'
+import { Avatar, PageHead, Segmented, Select, Stat } from '../components/ui'
+import { TEAM, USER } from '../data/board'
+import { fmtMonth, todayISO } from '../lib/format'
+import { isDone, personal } from '../lib/selectors'
+import DateGroups from '../components/DateGroups'
 import { useApp } from '../lib/store'
 
-const FILTERS = ['Open', 'Done', 'All']
-const CAP = 24
-
-export function TaskRow({ t, d, showOwner }) {
-  const { toggleDone, openTask } = useApp()
-  return (
-    <li
-      className={`card task hl rise${isDone(t) ? ' done' : ''}${t.fresh ? ' fresh' : ''}`}
-      style={{ '--d': d }}
-      onClick={() => openTask(t)}
-      tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && openTask(t)}
-    >
-      <button
-        type="button"
-        className="tick-box"
-        aria-label={isDone(t) ? 'Reopen task' : 'Mark as done'}
-        onClick={(e) => {
-          e.stopPropagation()
-          toggleDone(t)
-        }}
-      >
-        <Icon name="check" size={14} stroke={2.6} />
-      </button>
-      <Prio p={t.priority} />
-      <div className="task-body">
-        <b>{t.title}</b>
-        <span>
-          {showOwner && <em className="task-owner">{t.owner}</em>}
-          {t.pillar && <i className={`dot ${pillarTone(t.pillar)}`} />}
-          {[t.pillar, t.workstream].filter(Boolean).join(' · ') || 'No pillar'}
-          {t.notes && <em className="task-note"> — {t.notes}</em>}
-        </span>
-      </div>
-      {t.status !== 'Not started' && t.status !== 'Done' && <StatusPill status={t.status} />}
-      <span className="task-hrs" title="Story points · hours">
-        <span>{pts(t.points)}</span>
-        {t.hours != null && <span>{hrs(t.hours)}h</span>}
-      </span>
-      <TaskDates t={t} stack />
-    </li>
-  )
-}
+const FILTERS = ['Open', 'Completed', 'All']
 
 export default function MyWork() {
   const { tasks, month, me, setMe, addTask, openTask, toast } = useApp()
   const [filter, setFilter] = useState('Open')
   const [draft, setDraft] = useState('')
-  const [more, setMore] = useState(false)
   const p = personal(tasks, me, month)
   const today = todayISO()
 
@@ -68,15 +26,12 @@ export default function MyWork() {
     setFilter('Open')
   }
 
-  const shown = p.mine.filter((t) => filter === 'All' || (filter === 'Done') === isDone(t))
-  const groups = BUCKETS.map((b) => {
-    let list = shown.filter((t) => dueBucket(t, today) === b)
-    list = b === 'Done' ? list.sort((x, y) => (y.completed || '').localeCompare(x.completed || '')) : list.sort((x, y) => (x.due || '').localeCompare(y.due || '') || (x.priority || 'P9').localeCompare(y.priority || 'P9'))
-    return { b, list }
-  }).filter((g) => g.list.length)
+  const open = p.mine.filter((t) => !isDone(t))
+  const done = p.mine.filter(isDone)
+  const showOpen = filter !== 'Completed' && open.length > 0
+  const showDone = filter !== 'Open' && done.length > 0
 
   const title = me === USER.name ? 'My Work' : `${me}’s Tasks`
-  let d = 6
   return (
     <>
       <PageHead title={title} sub={`${me}’s tab · ${fmtMonth(month)} to-do list`}>
@@ -109,27 +64,26 @@ export default function MyWork() {
         <kbd>↵</kbd>
       </form>
 
-      {groups.map(({ b, list }) => {
-        const cut = b === 'Done' && !more ? list.slice(0, CAP) : list
-        return (
-          <section key={b} className="task-group">
-            <h2 className={`rise${b === 'Overdue' ? ' late' : ''}`} style={{ '--d': d++ }}>
-              {b} <span>{list.length}</span>
+      {showOpen && (
+        <section className="list-part">
+          {filter === 'All' && (
+            <h2 className="part-head rise" style={{ '--d': 6 }}>
+              Open <span>{open.length}</span>
             </h2>
-            <ul>
-              {cut.map((t) => (
-                <TaskRow key={t.id} t={t} d={Math.min(d++, 18)} />
-              ))}
-            </ul>
-            {cut.length < list.length && (
-              <button type="button" className="chip more" onClick={() => setMore(true)}>
-                Show {list.length - cut.length} more
-              </button>
-            )}
-          </section>
-        )
-      })}
-      {groups.length === 0 && (
+          )}
+          <DateGroups key={`${me}-open`} tasks={open} mode="open" />
+        </section>
+      )}
+      {showDone && (
+        <section className="list-part done-part">
+          <h2 className="part-head rise" style={{ '--d': 6 }}>
+            <i className="done-dot" /> Completed <span>{done.length}</span>
+            <small>by completed date, newest first</small>
+          </h2>
+          <DateGroups key={`${me}-done`} tasks={done} mode="done" limit={40} />
+        </section>
+      )}
+      {!showOpen && !showDone && (
         <div className="card empty-card rise" style={{ '--d': 6 }}>
           <Icon name="check" size={26} />
           <b>{filter === 'Open' ? 'Nothing open' : 'Nothing here yet'}</b>

@@ -177,6 +177,7 @@ export const HYGIENE = [
   { id: 'noHours', label: 'Done without hours', hint: 'Not counted in hours logged', test: (t) => isDone(t) && t.hours == null },
   { id: 'noCompleted', label: 'Done without a Completed Date', hint: 'Hours can’t be credited to a day', test: (t) => isDone(t) && !t.completed },
   { id: 'noPoints', label: 'No story points', hint: 'Left out of story points done', test: (t) => t.points == null },
+  { id: 'futureDone', label: 'Completed date in the future', hint: 'Hours land on a day that hasn’t happened yet', test: (t) => isDone(t) && !!t.completed && t.completed > todayISO() },
   { id: 'noWorkstream', label: 'No Workstream picked', hint: 'Left out of By Workstream', test: (t) => !t.workstream },
   { id: 'noDue', label: 'Open with no Due Date', hint: 'Can’t be scheduled', test: (t) => isOpen(t) && !t.due },
 ]

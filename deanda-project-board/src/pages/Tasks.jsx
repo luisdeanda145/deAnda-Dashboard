@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import Icon from '../components/Icon'
 import { Avatar, PageHead, Prio, Segmented, Select, StatusPill, TaskDates } from '../components/ui'
 import { ALL_PILLARS, TEAM, pillarTone } from '../data/board'
-import { hrs } from '../lib/format'
+import { dayName, fmtDay, hrs, todayISO, weekName, weekStart } from '../lib/format'
 import { HYGIENE, isDone } from '../lib/selectors'
 import { useApp } from '../lib/store'
 
@@ -12,11 +12,11 @@ const COLS = [
   { id: 'pillar', label: 'Pillar / workstream' },
   { id: 'priority', label: 'Priority' },
   { id: 'status', label: 'Status' },
-  { id: 'due', label: 'Dates' },
+  { id: 'due', label: 'Date' },
   { id: 'points', label: 'Pts', num: true },
   { id: 'hours', label: 'Hrs', num: true },
 ]
-const FILTERS = ['Open', 'Done', 'All']
+const FILTERS = ['Open', 'Completed', 'All']
 const ANY_OWNER = 'Everyone'
 const ANY_PILLAR = 'All pillars'
 const PAGE = 60
@@ -24,6 +24,10 @@ const PAGE = 60
 const CSV_COLS = ['owner', 'title', 'pillar', 'workstream', 'priority', 'status', 'due', 'completed', 'points', 'hours', 'notes']
 const CSV_HEAD = ['Owner', 'Task', 'Pillar', 'Workstream', 'Priority', 'Status', 'Due Date', 'Completed Date', 'Story Points', 'Hours', 'Notes']
 const cell = (v) => (v == null ? '' : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v))
+
+/* the Dates column sorts by the date that matters: Completed Date once Done, Due Date before */
+const dateOf = (t) => (isDone(t) ? t.completed : t.due)
+const valueOf = (t, by) => (by === 'due' ? dateOf(t) : t[by])
 
 /** The ToDo Feed: every row from every personal tab in one sortable table. */
 export default function Tasks() {
@@ -36,20 +40,21 @@ export default function Tasks() {
   const [sort, setSort] = useState({ by: 'due', dir: 1 })
   const [limit, setLimit] = useState(PAGE)
   const hygiene = HYGIENE.find((h) => h.id === rule)
+  const today = todayISO()
 
   const s = q.trim().toLowerCase()
   const rows = tasks
     .filter(
       (t) =>
-        (filter === 'All' || (filter === 'Done') === isDone(t)) &&
+        (filter === 'All' || (filter === 'Completed') === isDone(t)) &&
         (owner === ANY_OWNER || t.owner === owner) &&
         (pillar === ANY_PILLAR || t.pillar === pillar) &&
         (!hygiene || hygiene.test(t)) &&
         (!s || `${t.title} ${t.notes || ''} ${t.pillar || ''} ${t.workstream || ''} ${t.owner}`.toLowerCase().includes(s)),
     )
     .sort((a, b) => {
-      const x = a[sort.by]
-      const y = b[sort.by]
+      const x = valueOf(a, sort.by)
+      const y = valueOf(b, sort.by)
       if (x == null && y == null) return 0
       if (x == null) return 1
       if (y == null) return -1
@@ -82,7 +87,15 @@ export default function Tasks() {
 
       <div className="filter-bar rise" style={{ '--d': 1 }}>
         <div className="filters">
-          <Segmented value={filter} options={FILTERS} onChange={setFilter} />
+          <Segmented
+            value={filter}
+            options={FILTERS}
+            onChange={(f) => {
+              setFilter(f)
+              /* completed work reads newest first; open work soonest first */
+              if (sort.by === 'due') setSort({ by: 'due', dir: f === 'Completed' ? -1 : 1 })
+            }}
+          />
           <Select value={owner} options={[ANY_OWNER, ...TEAM.map((p) => p.name)]} onChange={setOwner} align="left" prefix={<Icon name="user" size={15} />} />
           <Select value={pillar} options={[ANY_PILLAR, ...ALL_PILLARS]} onChange={setPillar} align="left" prefix={<Icon name="layers" size={15} />} />
           {hygiene && (
@@ -117,43 +130,59 @@ export default function Tasks() {
               </tr>
             </thead>
             <tbody>
-              {rows.slice(0, limit).map((t, i) => {
+              {rows.slice(0, limit).map((t, i, all) => {
+                /* when sorted by date, a heading row opens each new day, naming its week */
+                const day = sort.by === 'due' ? dateOf(t) || null : undefined
+                const prev = i > 0 && sort.by === 'due' ? dateOf(all[i - 1]) || null : undefined
+                const head = sort.by === 'due' && (i === 0 || day !== prev || isDone(t) !== isDone(all[i - 1]))
                 return (
-                  <tr key={t.id} style={{ '--i': Math.min(i, 20) }} onClick={() => openTask(t)}>
-                    <td className="t-title">
-                      <b>{t.title}</b>
-                      {t.notes && <em>{t.notes}</em>}
-                    </td>
-                    <td>
-                      <span className="who sm">
-                        <Avatar person={t.owner} size={26} />
-                        {t.owner}
-                      </span>
-                    </td>
-                    <td className="t-pillar">
-                      {t.pillar ? (
-                        <>
-                          <span>
-                            <i className={`dot ${pillarTone(t.pillar)}`} /> {t.pillar}
-                          </span>
-                          <em>{t.workstream || 'No workstream'}</em>
-                        </>
-                      ) : (
-                        <span className="muted">—</span>
-                      )}
-                    </td>
-                    <td>
-                      <Prio p={t.priority} />
-                    </td>
-                    <td>
-                      <StatusPill status={t.status} />
-                    </td>
-                    <td className="t-date-cell">
-                      <TaskDates t={t} stack />
-                    </td>
-                    <td className="num">{t.points ?? '—'}</td>
-                    <td className="num">{hrs(t.hours)}</td>
-                  </tr>
+                  <Fragment key={t.id}>
+                    {head && (
+                      <tr className={`day-row${isDone(t) ? ' done' : day && day < today ? ' day-late' : ''}`}>
+                        <td colSpan={COLS.length}>
+                          {isDone(t) ? <Icon name="check" size={13} stroke={2.6} /> : <Icon name="calendar" size={13} />}
+                          {isDone(t) ? 'Completed ' : day ? 'Due ' : ''}
+                          {day ? dayName(day, today) : isDone(t) ? 'No completed date' : 'No due date'}
+                          {day && <em>{weekName(weekStart(day), today) || `Week of ${fmtDay(weekStart(day))}`}</em>}
+                        </td>
+                      </tr>
+                    )}
+                    <tr className={isDone(t) ? 'row-done' : ''} style={{ '--i': Math.min(i, 20) }} onClick={() => openTask(t)}>
+                      <td className="t-title">
+                        <b>{t.title}</b>
+                        {t.notes && <em>{t.notes}</em>}
+                      </td>
+                      <td>
+                        <span className="who sm">
+                          <Avatar person={t.owner} size={26} />
+                          {t.owner}
+                        </span>
+                      </td>
+                      <td className="t-pillar">
+                        {t.pillar ? (
+                          <>
+                            <span>
+                              <i className={`dot ${pillarTone(t.pillar)}`} /> {t.pillar}
+                            </span>
+                            <em>{t.workstream || 'No workstream'}</em>
+                          </>
+                        ) : (
+                          <span className="muted">—</span>
+                        )}
+                      </td>
+                      <td>
+                        <Prio p={t.priority} />
+                      </td>
+                      <td>
+                        <StatusPill status={t.status} />
+                      </td>
+                      <td className="t-date-cell">
+                        <TaskDates t={t} stack />
+                      </td>
+                      <td className="num">{t.points ?? '—'}</td>
+                      <td className="num">{hrs(t.hours)}</td>
+                    </tr>
+                  </Fragment>
                 )
               })}
             </tbody>

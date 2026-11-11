@@ -5,7 +5,7 @@ import { WORKSTREAMS } from '../data/board'
 import { hrs, pts } from '../lib/format'
 import { byPillar, byWorkstream, isOpen } from '../lib/selectors'
 import { useApp } from '../lib/store'
-import { TaskRow } from './MyWork'
+import DateGroups from '../components/DateGroups'
 
 const SORTS = ['Open', 'Hours', 'A–Z']
 
@@ -19,7 +19,7 @@ export default function Pillars() {
   const p = all.find((x) => x.name === pick) || all[0] // the picked pillar may have been removed
   const ws = byWorkstream(tasks, p.name)
   const wsMax = Math.max(1, ...ws.map((w) => w.planned))
-  const open = p.tasks.filter(isOpen).sort((a, b) => (a.priority || 'P9').localeCompare(b.priority || 'P9') || (a.due || '9').localeCompare(b.due || '9'))
+  const open = p.tasks.filter(isOpen)
   const pct = p.planned ? (p.completed / p.planned) * 100 : 0
 
   return (
@@ -145,11 +145,7 @@ export default function Pillars() {
                 <Icon name="plus" size={14} stroke={2.2} /> Add to {p.name}
               </button>
             </h2>
-            <ul>
-              {open.slice(0, 40).map((t, i) => (
-                <TaskRow key={t.id} t={t} d={Math.min(5 + i, 16)} showOwner />
-              ))}
-            </ul>
+            <DateGroups key={p.name} tasks={open} mode="open" showOwner limit={40} d0={5} />
             {open.length === 0 && <p className="muted-line">Everything on this pillar is done.</p>}
           </section>
         </div>

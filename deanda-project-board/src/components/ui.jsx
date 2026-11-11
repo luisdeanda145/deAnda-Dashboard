@@ -1,7 +1,7 @@
 import { Fragment, useRef, useState } from 'react'
 import Icon from './Icon'
 import { useDismiss } from '../lib/hooks'
-import { dueLabel, fmtDay, hrs, initials, pct } from '../lib/format'
+import { dueLabel, fmtDay, hrs, initials, pastLabel, pct } from '../lib/format'
 import { useCountUp } from '../lib/hooks'
 import { PRIORITIES, statusTone } from '../data/board'
 
@@ -160,11 +160,11 @@ export function TaskDates({ t, stack }) {
   return (
     <span className={`t-dates${stack ? ' t-stacked' : ''}`}>
       <span className={late ? 'late' : ''} title="Due date">
-        <Icon name="calendar" size={12} /> {done ? (t.due ? fmtDay(t.due) : 'No date') : dueLabel(t.due)}
+        <Icon name="calendar" size={12} /> {done ? (t.due ? `Due ${fmtDay(t.due)}` : 'No due date') : dueLabel(t.due)}
       </span>
       {done && (
         <span className="t-done" title="Completed date">
-          <Icon name="check" size={12} stroke={2.4} /> {t.completed ? fmtDay(t.completed) : 'No date'}
+          <Icon name="check" size={12} stroke={2.4} /> {t.completed ? `Done ${pastLabel(t.completed)}` : 'No completed date'}
         </span>
       )}
     </span>

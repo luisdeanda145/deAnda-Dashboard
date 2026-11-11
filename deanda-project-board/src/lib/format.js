@@ -70,14 +70,54 @@ export const daysInMonth = (ym) => {
 }
 export const inMonth = (s, ym) => !!s && s.startsWith(ym)
 
-/** Relative label for a due date: "Today", "Tomorrow", "3d late", "Fri", "Nov 24" */
+/* ---------------- weeks (Monday to Sunday) ---------------- */
+/** The Monday of the week a day falls in */
+export const weekStart = (s) => addDays(s, -((parse(s).getDay() + 6) % 7))
+export const sameWeek = (a, b) => weekStart(a) === weekStart(b)
+
+/** "Nov 9 – 15", or "Oct 26 – Nov 1" across a month end */
+export function fmtRange(a, b) {
+  const x = parse(a)
+  const y = parse(b)
+  return x.getMonth() === y.getMonth() ? `${MONTHS[x.getMonth()]} ${x.getDate()} – ${y.getDate()}` : `${fmtDay(a)} – ${fmtDay(b)}`
+}
+
+/** "Wed, Nov 11" */
+export const fmtDow = (s) => `${dow(s)}, ${fmtDay(s)}`
+
+/** A week's name relative to today: "This week", "Last week", "Next week", or null for other weeks */
+export function weekName(monday, today = todayISO()) {
+  const n = diffDays(monday, weekStart(today)) / 7
+  if (n === 0) return 'This week'
+  if (n === -1) return 'Last week'
+  if (n === 1) return 'Next week'
+  return null
+}
+
+/** A day's name relative to today, always with its date: "Today · Wed, Nov 11", "Thu, Nov 12" */
+export function dayName(s, today = todayISO()) {
+  const n = diffDays(s, today)
+  if (n === 0) return `Today · ${fmtDow(s)}`
+  if (n === 1) return `Tomorrow · ${fmtDow(s)}`
+  if (n === -1) return `Yesterday · ${fmtDow(s)}`
+  return fmtDow(s)
+}
+
+/** Label for an open task's due date, always with the date:
+    "Today · Nov 11", "Tomorrow · Nov 12", "2d late · Nov 9", "Fri, Nov 13", "Nov 24" */
 export function dueLabel(s, today = todayISO()) {
   if (!s) return 'No date'
   const n = diffDays(s, today)
-  if (n === 0) return 'Today'
-  if (n === 1) return 'Tomorrow'
-  if (n === -1) return 'Yesterday'
-  if (n < 0) return `${-n}d late`
-  if (n < 7) return dow(s)
+  if (n === 0) return `Today · ${fmtDay(s)}`
+  if (n === 1) return `Tomorrow · ${fmtDay(s)}`
+  if (n < 0) return `${-n}d late · ${fmtDay(s)}`
+  if (n < 14) return fmtDow(s)
   return fmtDay(s)
+}
+
+/** Label for a past date such as a completion: "Today · Nov 11", "Tue, Nov 10" this week, else "Nov 3" */
+export function pastLabel(s, today = todayISO()) {
+  if (!s) return 'No date'
+  if (s === today) return `Today · ${fmtDay(s)}`
+  return sameWeek(s, today) ? fmtDow(s) : fmtDay(s)
 }

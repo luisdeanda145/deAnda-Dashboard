@@ -506,7 +506,7 @@
   height: 56px;
 }
 .t-title {
-  max-width: 185px;
+  max-width: 150px;
   white-space: normal !important;
 }
 .t-title b,
@@ -1893,6 +1893,11 @@
   gap: 8px;
   font-size: 12px;
 }
+.tcard footer .t-dates.t-stacked {
+  align-items: flex-start;
+  min-width: 0;
+  margin-right: auto;
+}
 .t-date-cell .t-dates.t-stacked {
   align-items: flex-start;
   min-width: 0;
@@ -1904,4 +1909,169 @@
 }
 .tasks-table .who.sm {
   white-space: nowrap;
+}
+
+/* ---------------- tasks by week and day ---------------- */
+.list-part {
+  margin-bottom: 26px;
+}
+.part-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 14px;
+  font-size: 19px;
+  font-weight: 600;
+}
+.part-head span,
+.week-group h2 span,
+.day-group h3 span {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--fill-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+.part-head small {
+  margin-left: 4px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.done-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 0 4px rgba(125, 233, 216, 0.18);
+}
+.week-group {
+  margin-bottom: 22px;
+}
+.week-group h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 16px;
+  font-weight: 600;
+}
+.week-group h2 em {
+  font-style: normal;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.week-group h2 span {
+  align-self: center;
+}
+.week-group.week-late h2 {
+  color: var(--red);
+}
+.week-group > ul,
+.day-group ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.day-group {
+  margin-bottom: 14px;
+}
+.day-group h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px 4px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.day-group h3 em {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--red);
+}
+.day-group h3 span {
+  min-width: 20px;
+  height: 20px;
+  font-size: 11.5px;
+}
+.day-group h3.late {
+  color: var(--red);
+}
+.day-group h3.today {
+  color: var(--blue-hi);
+}
+.date-groups .chip.more {
+  margin-top: 4px;
+}
+
+/* ---------------- completed tasks stand apart ---------------- */
+.task.done {
+  background-color: rgba(125, 233, 216, 0.06);
+  box-shadow: inset 3px 0 0 var(--teal);
+}
+.done-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: rgba(125, 233, 216, 0.16);
+  color: var(--teal);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.task.done .t-dates > span:first-child {
+  color: var(--muted);
+}
+.tcard.done {
+  box-shadow: inset 3px 0 0 var(--teal);
+}
+.tcard.done > b {
+  color: var(--ink-2);
+}
+.tasks-table tr.row-done td:first-child {
+  box-shadow: inset 3px 0 0 var(--teal);
+}
+.tasks-table tr.row-done .t-title b {
+  color: var(--ink-2);
+}
+.tasks-table tr.day-row td {
+  height: 34px;
+  padding-top: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.04);
+}
+.tasks-table tr.day-row td svg {
+  margin-right: 6px;
+  vertical-align: -2px;
+  opacity: 0.8;
+}
+.tasks-table tr.day-row td em {
+  margin-left: 10px;
+  font-style: normal;
+  font-weight: 500;
+  color: var(--muted);
+}
+.tasks-table tr.day-row.done td {
+  color: var(--teal);
+}
+.tasks-table tr.day-row.day-late td {
+  color: var(--red);
+}
+.tasks-table tr.day-row {
+  cursor: default;
+  pointer-events: none;
 }

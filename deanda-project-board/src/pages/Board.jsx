@@ -112,7 +112,7 @@ export default function Board() {
                   return (
                     <article
                       key={t.id}
-                      className={`deal tcard hl${drag === t.id ? ' dragging' : ''}${t.moved ? ' moved' : ''}`}
+                      className={`deal tcard hl${t.status === 'Done' ? ' done' : ''}${drag === t.id ? ' dragging' : ''}${t.moved ? ' moved' : ''}`}
                       draggable
                       onClick={() => openTask(t)}
                       onDragStart={(e) => {
@@ -139,7 +139,7 @@ export default function Board() {
                       {t.notes && s.id === 'Blocked' && <span className="tcard-note">{t.notes}</span>}
                       <footer>
                         <Avatar person={t.owner} size={22} />
-                        <TaskDates t={t} />
+                        <TaskDates t={t} stack={t.status === 'Done'} />
                         {t.points != null && <span title="Story points">{pts(t.points)}</span>}
                         {t.hours != null && (
                           <span title="Hours">
