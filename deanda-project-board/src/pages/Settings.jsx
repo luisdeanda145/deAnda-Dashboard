@@ -2,8 +2,8 @@ import Icon from '../components/Icon'
 import { Avatar, PageHead, Switch } from '../components/ui'
 import { DEFAULTS } from '../lib/settings'
 import { PILLARS, TEAM, USER, WORKSTREAMS } from '../data/board'
-import { currentMonth, fmtMonth } from '../lib/format'
-import { focusOf } from '../lib/selectors'
+import { fmtDay, fmtMonth } from '../lib/format'
+import { focusOf, shiftMonth } from '../lib/selectors'
 import { useApp } from '../lib/store'
 
 function Slider({ label, hint, value, min, max, step = 1, unit = '', onChange }) {
@@ -24,7 +24,7 @@ function Slider({ label, hint, value, min, max, step = 1, unit = '', onChange })
 }
 
 export default function Settings() {
-  const { settings, set, toast, month, setMonth, tasks, manage, removePerson, removePillar, removeWorkstream } = useApp()
+  const { settings, set, toast, month, tasks, archive, go, manage, removePerson, removePillar, removeWorkstream } = useApp()
   /* removals refuse while tasks still point at the thing; say why */
   const attempt = (problem, done) => toast(problem ? { icon: 'alert', title: 'Can’t remove yet', text: problem } : { icon: 'trash', title: 'Removed', text: done })
 
@@ -52,23 +52,24 @@ export default function Settings() {
             <div>
               <b>Reporting month</b>
               <small>
-                Hours and “done this month” use {fmtMonth(month)}.{' '}
-                {month === currentMonth() ? 'Follows the calendar.' : `Back to ${fmtMonth(currentMonth())} when this month ends.`}
+                Every page except Compare shows {fmtMonth(month)} only. On {fmtDay(`${shiftMonth(month, 1)}-01`)} the board resets: this month is archived for Compare and open tasks carry over.
               </small>
             </div>
-            <span className="month-pick">
-              {month !== currentMonth() && (
-                <button type="button" className="chip sm-chip" onClick={() => setMonth(currentMonth())}>
-                  This month
-                </button>
-              )}
-              <input type="month" className="date-in" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} />
-            </span>
+            <span className="status tone-blue">{fmtMonth(month)}</span>
+          </div>
+          <div className="set-row">
+            <div>
+              <b>Archived months</b>
+              <small>{Object.keys(archive).length ? Object.keys(archive).sort().reverse().map(fmtMonth).join(', ') : 'None yet. The first one is archived when this month ends.'}</small>
+            </div>
+            <button type="button" className="chip" onClick={() => go('compare')}>
+              Compare
+            </button>
           </div>
           <div className="set-row">
             <div>
               <b>Data source</b>
-              <small>{tasks.length} tasks, first imported from Project_Board_Nov_2026.xlsx; changes are kept in memory until the backend is connected</small>
+              <small>{tasks.length} tasks on this month’s board, first imported from Project_Board_Nov_2026.xlsx; changes are kept in memory until the backend is connected</small>
             </div>
             <span className="status tone-amber">Local</span>
           </div>

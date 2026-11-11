@@ -3,12 +3,15 @@ import Icon from './Icon'
 import { Avatar } from './ui'
 import { USER, WORKSPACE } from '../data/board'
 import { PAGES } from '../data/pages'
-import { isOpen } from '../lib/selectors'
+import { daysInMonth, fmtMonth, shortMonth } from '../lib/format'
+import { isOpen, shiftMonth } from '../lib/selectors'
 import { useApp } from '../lib/store'
 
 /** The bent-back left panel of the main window: workspace and navigation. */
 export default function Sidebar() {
-  const { page, go, tasks, openTask } = useApp()
+  const { page, go, tasks, openTask, month, today } = useApp()
+  const dayN = Number(today.slice(8, 10))
+  const days = daysInMonth(month)
   const nav = useRef(null)
   const [ind, setInd] = useState(null)
 
@@ -64,6 +67,21 @@ export default function Sidebar() {
         <Icon name="plus" size={18} stroke={2.2} />
         <span className="nt-label">New task</span>
         <kbd>N</kbd>
+      </button>
+
+      <button type="button" className="month-tile" onClick={() => go('compare')} title="Every page shows this month only. Past months are in Compare.">
+        <span className="mt-ic">
+          <Icon name="calendar" size={18} />
+        </span>
+        <span className="mt-body">
+          <b>{fmtMonth(month)}</b>
+          <small>
+            Day {dayN} of {days} · resets {shortMonth(shiftMonth(month, 1))} 1
+          </small>
+        </span>
+        <i className="mt-bar" aria-hidden="true">
+          <i style={{ width: `${(dayN / days) * 100}%` }} />
+        </i>
       </button>
 
       <div className="nav" ref={nav}>

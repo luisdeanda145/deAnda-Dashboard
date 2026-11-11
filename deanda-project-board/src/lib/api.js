@@ -63,5 +63,59 @@ export async function deleteTask(id) {
   return latency({ id })
 }
 
+/* ---------------- month archive ----------------
+   When a month ends, its board (completed work plus what was still
+   open) and its totals are sent here; Compare reads them back.
+   Until the backend exists they are kept in this browser. */
+const ARCHIVE_KEY = 'dac-board-archive'
+const readArchive = () => {
+  try {
+    return JSON.parse(localStorage.getItem(ARCHIVE_KEY) || '{}')
+  } catch {
+    return {}
+  }
+}
+
+/** POST /months/:ym/close  — body: { month, closedAt, tasks, summary, stats } */
+export async function archiveMonth(snapshot) {
+  if (API_URL) {
+    // await fetch(`${API_URL}/months/${snapshot.month}/close`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(snapshot) })
+  }
+  try {
+    localStorage.setItem(ARCHIVE_KEY, JSON.stringify({ ...readArchive(), [snapshot.month]: snapshot }))
+  } catch {
+    /* storage full or unavailable: the backend will hold it once connected */
+  }
+  return latency(snapshot)
+}
+
+/** GET /months  → { 'YYYY-MM': snapshot } for every closed month */
+export async function fetchArchive() {
+  if (API_URL) {
+    // const res = await fetch(`${API_URL}/months`)
+    // return res.json()
+  }
+  return latency(readArchive())
+}
+export const initialArchive = readArchive
+
+/* Which month the board was last open on, so a month that ended while
+   nobody had the app open still gets closed on the next visit. */
+const OPEN_KEY = 'dac-board-open-month'
+export const lastOpenMonth = () => {
+  try {
+    return localStorage.getItem(OPEN_KEY)
+  } catch {
+    return null
+  }
+}
+export const markOpenMonth = (ym) => {
+  try {
+    localStorage.setItem(OPEN_KEY, ym)
+  } catch {
+    /* ignore */
+  }
+}
+
 /** The initial rows, available synchronously so the first paint has data. */
 export const initialTasks = () => SEED.map((t) => ({ ...t }))

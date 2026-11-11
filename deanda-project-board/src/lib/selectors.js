@@ -237,3 +237,31 @@ export function monthsWithData(tasks) {
   })
   return [...set].sort().reverse()
 }
+
+/* ============================================================
+   The monthly board. Like the sheet, each month has its own
+   board: the work completed that month plus everything still
+   open, which carries over from month to month. Completed work
+   from earlier months leaves the board and lives in the archive
+   (see closeMonth and src/lib/api.js), which Compare reads.
+   ============================================================ */
+
+/** Is a task on month ym's board? */
+export function onBoard(t, ym) {
+  if (!isDone(t)) return true // open work carries over
+  if (t.completed) return t.completed.slice(0, 7) >= ym // done this month (or dated ahead, kept so it can be fixed)
+  return !t.due || t.due.slice(0, 7) >= ym // done with no completed date: by due date
+}
+export const boardTasks = (tasks, ym) => tasks.filter((t) => onBoard(t, ym))
+
+/** The snapshot sent to the archive when month ym closes. */
+export function closeMonth(tasks, ym) {
+  const board = boardTasks(tasks, ym).filter((t) => !isDone(t) || !t.completed || t.completed.slice(0, 7) === ym)
+  return {
+    month: ym,
+    closedAt: new Date().toISOString(),
+    tasks: board.map(({ fresh, moved, ...t }) => t), // eslint-disable-line no-unused-vars
+    summary: summary(board, ym),
+    stats: monthStats(board, ym),
+  }
+}

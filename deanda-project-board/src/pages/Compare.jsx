@@ -3,7 +3,7 @@ import Icon from '../components/Icon'
 import { MonthBars } from '../components/Charts'
 import { Avatar, CardHead, PageHead, Segmented, Select } from '../components/ui'
 import { PILLARS, TEAM } from '../data/board'
-import { fmtMonth, hrs, monthTick } from '../lib/format'
+import { fmtDay, fmtMonth, hrs, monthTick } from '../lib/format'
 import { monthStats, monthsWithData, shiftMonth } from '../lib/selectors'
 import { useApp } from '../lib/store'
 
@@ -103,23 +103,29 @@ function Breakdown({ by, icon, rows, a, b, metric, setMetric, renderName }) {
 
 /** Month over month: the reporting month against any earlier one. */
 export default function Compare() {
-  const { tasks, month } = useApp()
+  const { allTasks: tasks, archive, month } = useApp()
+  /* a closed month reads from its archived snapshot; the current month is live */
+  const statsFor = (ym) => (archive[ym] ? monthStats(archive[ym].tasks, ym) : monthStats(tasks, ym))
+  const sourceOf = (ym) => (ym === month ? 'Live · this month' : archive[ym] ? `Archived ${fmtDay(archive[ym].closedAt.slice(0, 10))}` : 'Not archived')
   const [a, setA] = useState(month)
   const [b, setB] = useState(() => shiftMonth(month, -1))
   const [pin, setPin] = useState(5)
   const [personMetric, setPersonMetric] = useState('Hours')
   const [pillarMetric, setPillarMetric] = useState('Hours')
 
-  /* the last 12 months up to the reporting month, plus any other month that has dated work */
-  const options = [...new Set([...Array.from({ length: 12 }, (_, i) => shiftMonth(month, -i)), ...monthsWithData(tasks)])].sort().reverse()
-  const sa = monthStats(tasks, a)
-  const sb = monthStats(tasks, b)
-  const history = monthsWithData(tasks).filter((m) => m < a)
+  /* the last 12 months up to this one, every archived month, and any month that has dated work */
+  const options = [...new Set([...Array.from({ length: 12 }, (_, i) => shiftMonth(month, -i)), ...Object.keys(archive), ...monthsWithData(tasks)])]
+    .filter((m) => m <= month)
+    .sort()
+    .reverse()
+  const sa = statsFor(a)
+  const sb = statsFor(b)
+  const history = [...new Set([...Object.keys(archive), ...monthsWithData(tasks)])].filter((m) => m < a).sort().reverse()
 
   /* six-month trend ending at month A */
   const trend = Array.from({ length: 6 }, (_, i) => {
     const ym = shiftMonth(a, i - 5)
-    const s = monthStats(tasks, ym)
+    const s = statsFor(ym)
     return { m: monthTick(ym), ym, open: 0, closed: s.hours, done: s.done }
   })
 
@@ -129,11 +135,20 @@ export default function Compare() {
 
   return (
     <>
-      <PageHead title="Compare" sub="One month against another, by Completed Date and Due Date">
+      <PageHead title="Compare" sub="Every page but this one shows only the current month. Closed months are archived on the 1st and compared here.">
         <Select value={a} options={options} onChange={setA} render={fmtMonth} />
         <span className="cmp-vs">vs</span>
         <Select value={b} options={options} onChange={setB} render={fmtMonth} />
       </PageHead>
+
+      <div className="cmp-sources rise" style={{ '--d': 1 }}>
+        <span>
+          <i className="dot blue" /> <b>{fmtMonth(a)}</b> {sourceOf(a)}
+        </span>
+        <span>
+          <i className="ring" /> <b>{fmtMonth(b)}</b> {sourceOf(b)}
+        </span>
+      </div>
 
       {sb.empty && (
         <p className="cmp-note card rise" style={{ '--d': 1 }}>

@@ -3,7 +3,8 @@ import { AppContext } from './lib/store'
 import { USER, applyDirectory } from './data/board'
 import { codeFor, loadDirectory, same, saveDirectory } from './lib/directory'
 import * as api from './lib/api'
-import { currentMonth, todayISO } from './lib/format'
+import { fmtMonth, todayISO } from './lib/format'
+import { boardTasks, closeMonth, shiftMonth } from './lib/selectors'
 import { DEFAULTS } from './lib/settings'
 import Environment from './components/Environment'
 import Sidebar from './components/Sidebar'
@@ -54,18 +55,28 @@ function loadSettings() {
   }
 }
 
-/* The reporting month is the current calendar month. A month picked in Settings
-   is remembered until the calendar month ends, then the board moves on by itself. */
-const MONTH_KEY = 'dac-board-month'
-function loadMonth() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(MONTH_KEY) || 'null')
-    if (saved && saved.chosenIn === currentMonth() && /^\d{4}-\d{2}$/.test(saved.month)) return saved.month
-  } catch {
-    /* storage unavailable: use the calendar */
-  }
-  return currentMonth()
+/** Snapshots for every month from `open` up to (not including) `now` that isn't archived yet. */
+function closeEnded(archive, tasks, open, now) {
+  const out = []
+  if (!open || open >= now) return out
+  for (let ym = open; ym < now; ym = shiftMonth(ym, 1)) if (!archive[ym]) out.push(closeMonth(tasks, ym))
+  return out
 }
+
+/* Start-up: close any month that ended since the board was last open (e.g. the app
+   wasn't opened on the 1st), before the first render, so every view starts on the
+   current month's board. */
+const BOOT = (() => {
+  const archive = api.initialArchive()
+  const now = todayISO().slice(0, 7)
+  const snaps = closeEnded(archive, api.initialTasks(), api.lastOpenMonth(), now)
+  snaps.forEach((snap) => {
+    archive[snap.month] = snap
+    api.archiveMonth(snap)
+  })
+  api.markOpenMonth(now)
+  return { archive, closed: snaps.map((x) => x.month) }
+})()
 
 const pageFromHash = () => {
   const id = location.hash.replace(/^#\/?/, '')
@@ -85,28 +96,43 @@ export default function App() {
 
   /* ---------------- board state ---------------- */
   const [tasks, setTasks] = useState(api.initialTasks)
-  const [month, setMonthState] = useState(loadMonth)
-  const setMonth = useCallback((m) => {
-    setMonthState(m)
-    try {
-      localStorage.setItem(MONTH_KEY, JSON.stringify({ month: m, chosenIn: currentMonth() }))
-    } catch {
-      /* the choice then lasts for this visit */
-    }
+  const [archive, setArchive] = useState(BOOT.archive)
+
+  const toast = useCallback((t) => {
+    const id = Math.random().toString(36).slice(2)
+    setToasts((all) => [...all.slice(-2), { id, ...t }])
+    setTimeout(() => setToasts((all) => all.filter((x) => x.id !== id)), 3200)
   }, [])
+  const announceClosed = useCallback((ym) => toast({ icon: 'calendar', title: `${fmtMonth(ym)} closed`, text: 'Archived for Compare · a new month’s board has started' }), [toast])
+
+  /* months that ended while nobody had the app open were closed at start-up; say so once */
+  useEffect(() => {
+    BOOT.closed.splice(0).forEach(announceClosed)
+  }, [announceClosed])
 
   /* "today" moves on at midnight even with the page left open (or a laptop asleep):
-     check once a minute and when the window comes back; a new day re-draws every view */
+     check once a minute and when the window comes back; a new day re-draws every view,
+     and a new month closes the one that just ended */
   const [today, setToday] = useState(todayISO)
-  const todayRef = useRef(today)
+  const latest = useRef({ today, tasks, archive })
+  useEffect(() => {
+    latest.current = { ...latest.current, tasks, archive }
+  }, [tasks, archive])
   useEffect(() => {
     const check = () => {
       const t = todayISO()
-      if (t === todayRef.current) return
-      const newMonth = t.slice(0, 7) !== todayRef.current.slice(0, 7)
-      todayRef.current = t
+      const was = latest.current.today
+      if (t === was) return
+      latest.current.today = t
       setToday(t)
-      if (newMonth) setMonthState(loadMonth())
+      if (t.slice(0, 7) === was.slice(0, 7)) return
+      const snaps = closeEnded(latest.current.archive, latest.current.tasks, was.slice(0, 7), t.slice(0, 7))
+      snaps.forEach((snap) => {
+        api.archiveMonth(snap)
+        announceClosed(snap.month)
+      })
+      if (snaps.length) setArchive((a) => ({ ...a, ...Object.fromEntries(snaps.map((x) => [x.month, x])) }))
+      api.markOpenMonth(t.slice(0, 7))
     }
     const id = setInterval(check, 60000)
     addEventListener('focus', check)
@@ -116,7 +142,12 @@ export default function App() {
       removeEventListener('focus', check)
       document.removeEventListener('visibilitychange', check)
     }
-  }, [])
+  }, [announceClosed])
+
+  /* the board is always this calendar month's; past months are in Compare */
+  const month = today.slice(0, 7)
+  const board = useMemo(() => boardTasks(tasks, month), [tasks, month])
+
   const [me, setMe] = useState(USER.name) // whose tab My Work shows
   const [preset, setPreset] = useState(null) // a filter handed to All Tasks
 
@@ -190,12 +221,6 @@ export default function App() {
   )
 
   const set = useCallback((patch) => setSettings((s) => ({ ...s, ...patch })), [])
-
-  const toast = useCallback((t) => {
-    const id = Math.random().toString(36).slice(2)
-    setToasts((all) => [...all.slice(-2), { id, ...t }])
-    setTimeout(() => setToasts((all) => all.filter((x) => x.id !== id)), 3200)
-  }, [])
 
   /* optimistic writes: the UI updates at once, the api call follows */
   const addTask = useCallback(async (task) => {
@@ -324,14 +349,15 @@ export default function App() {
       setSide,
       right,
       setRight,
-      tasks,
+      tasks: board, // this month's board: what every page except Compare shows
+      allTasks: tasks,
+      archive,
       addTask,
       patchTask,
       removeTask,
       toggleDone,
       openTask,
       month,
-      setMonth,
       today,
       me,
       setMe,
@@ -346,7 +372,7 @@ export default function App() {
       removeWorkstream,
       manage: (what, extra) => setSheet({ manage: what, ...extra }),
     }),
-    [page, go, settings, set, toast, spatial, side, right, tasks, addTask, patchTask, removeTask, toggleDone, openTask, month, setMonth, today, me, preset, dir, addPerson, removePerson, addPillar, removePillar, addWorkstream, removeWorkstream],
+    [page, go, settings, set, toast, spatial, side, right, tasks, addTask, patchTask, removeTask, toggleDone, openTask, month, today, board, archive, me, preset, dir, addPerson, removePerson, addPillar, removePillar, addWorkstream, removeWorkstream],
   )
 
   const View = VIEWS[page]

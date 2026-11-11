@@ -68,8 +68,6 @@ export const fmtMonth = (ym) => {
 export const shortMonth = (ym) => MONTHS[Number(ym.split('-')[1]) - 1]
 /** "Nov", or "Jan '27" for a month in another year */
 export const monthTick = (ym) => (Number(ym.slice(0, 4)) === thisYear() ? shortMonth(ym) : `${shortMonth(ym)} '${ym.slice(2, 4)}`)
-/** The calendar month today falls in, "2026-11" */
-export const currentMonth = () => todayISO().slice(0, 7)
 export const daysInMonth = (ym) => {
   const [y, m] = ym.split('-').map(Number)
   return new Date(y, m, 0).getDate()
