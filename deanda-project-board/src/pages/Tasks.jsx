@@ -2,7 +2,7 @@ import { Fragment, useState } from 'react'
 import Icon from '../components/Icon'
 import { Avatar, PageHead, Prio, Segmented, Select, StatusPill, TaskDates } from '../components/ui'
 import { ALL_PILLARS, TEAM, pillarTone } from '../data/board'
-import { dayName, fmtDay, hrs, recencyRank, todayISO, weekName, weekStart } from '../lib/format'
+import { dayName, diffDays, fmtDay, hrs, todayISO, weekName, weekStart } from '../lib/format'
 import { HYGIENE, isDone } from '../lib/selectors'
 import { useApp } from '../lib/store'
 
@@ -25,10 +25,21 @@ const CSV_COLS = ['owner', 'title', 'pillar', 'workstream', 'priority', 'status'
 const CSV_HEAD = ['Owner', 'Task', 'Pillar', 'Workstream', 'Priority', 'Status', 'Due Date', 'Completed Date', 'Story Points', 'Hours', 'Notes']
 const cell = (v) => (v == null ? '' : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v))
 
-/* the Date column sorts by the date that matters (Completed Date once Done, Due Date before),
-   today first, then the rest of this week, then older weeks, then weeks still to come */
+/* the Date column sorts by the date that matters: Due Date while open, Completed Date once Done */
 const dateOf = (t) => (isDone(t) ? t.completed : t.due)
-const valueOf = (t, by) => (by === 'due' ? recencyRank(dateOf(t)) * 2 + (isDone(t) ? 1 : 0) : t[by]) // open before completed on the same day
+
+/** Today first. Open work then runs overdue (most recent first) and on into the future;
+    completed work runs back in time. With both shown, open work comes first. */
+function dateRank(t, today) {
+  const day = dateOf(t)
+  const done = isDone(t)
+  const part = done ? 1e7 : 0
+  if (!day) return part + 5e6
+  const n = diffDays(day, today)
+  if (n === 0) return part
+  if (n < 0) return part + 1e3 - n
+  return part + (done ? 4e6 : 1e6 + n)
+}
 
 /** The ToDo Feed: every row from every personal tab in one sortable table. */
 export default function Tasks() {
@@ -41,8 +52,9 @@ export default function Tasks() {
   const [sort, setSort] = useState({ by: 'due', dir: 1 })
   const [limit, setLimit] = useState(PAGE)
   const hygiene = HYGIENE.find((h) => h.id === rule)
-  const today = todayISO()
 
+  const today = todayISO()
+  const valueOf = (t, by) => (by === 'due' ? dateRank(t, today) : t[by])
   const s = q.trim().toLowerCase()
   const rows = tasks
     .filter(

@@ -1970,9 +1970,6 @@
 .week-group h2 span {
   align-self: center;
 }
-.week-group.week-late h2 {
-  color: var(--red);
-}
 .week-group > ul,
 .day-group ul {
   display: flex;
@@ -2075,20 +2072,35 @@
   cursor: default;
   pointer-events: none;
 }
-.coming-up {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 30px 0 14px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
+.week-group.is-today h2 {
+  color: var(--blue-hi);
 }
-.coming-up::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.14);
+.week-group.is-late h2 {
+  color: var(--red);
+}
+.week-group.is-late h2 svg {
+  align-self: center;
+}
+.week-group.is-warn h2 {
+  color: var(--amber);
+}
+.week-group h2 .fold-btn {
+  align-self: center;
+  height: 26px;
+  margin-left: auto;
+  padding: 0 11px;
+  font-size: 12px;
+}
+.fold-line {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 18px;
+  text-align: left;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  box-shadow: inset 3px 0 0 var(--red);
+  cursor: pointer;
+}
+.fold-line:hover {
+  color: var(--ink);
 }
