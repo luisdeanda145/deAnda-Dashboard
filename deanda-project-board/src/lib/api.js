@@ -65,7 +65,7 @@ export async function deleteTask(id) {
 
 /* ---------------- month archive ----------------
    When a month ends, its board (completed work plus what was still
-   open) and its totals are sent here; Compare reads them back.
+   open) and its totals are sent here; Insights reads them back.
    Until the backend exists they are kept in this browser. */
 const ARCHIVE_KEY = 'dac-board-archive'
 const readArchive = () => {

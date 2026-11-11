@@ -23,8 +23,7 @@ npm run build    # production build into dist/
 | **Pillars** | Each pillar tab, its By Workstream breakdown and all its tasks in one timeline: Today, Overdue, the weeks ahead, then the weeks behind (where completed work sits) |
 | **Team** | By Person: hours, story points, completion, blocked, and hours per story point |
 | **Hours** | Daily Hours Tracker as a heat map, plus hours by pillar |
-| **Compare** | Month over month: pick any two months and compare hours logged, tasks completed and due, on-time rate, and the By Person / By Pillar breakdowns, plus a six-month hours trend. Work is credited by Completed Date and Due Date, so earlier months fill in as the board accumulates history. |
-| **Insights** | Estimate vs actual, due-date health, priority mix, and data hygiene (rows the sheet's formulas can't count) |
+| **Insights** | Month over month: pick any two months and compare hours logged, tasks completed and due, on-time rate, and the By Person / By Pillar breakdowns, plus a six-month hours trend. Work is credited by Completed Date and Due Date, so earlier months fill in as the board accumulates history. |
 | **Settings** | The current month and archived months; add or remove team members, pillars and workstreams; glass and spatial controls |
 | **How It Works** | The sheet's rules for the team |
 
@@ -34,7 +33,7 @@ Each task has **Story points** (effort: 1, 2, 3, 5, 8, 13) and **Hours** (time i
 
 Everything date-based is worked out from today's date each time the page draws, so sections, week ranges and the reporting month move on by themselves, including at midnight with the page left open. Dates outside the current year show their year ("Nov 3, 2025").
 
-**Monthly boards.** Every page except Compare shows only the current month's board: work completed this month plus everything still open (open work carries over, as on the monthly sheets). The sidebar shows the month, the day and when it resets. On the 1st, the month that ended is archived (its tasks, summary and totals) and Compare reads closed months from the archive. A month that ends while nobody has the app open is closed on the next visit.
+**Monthly boards.** Every page except Insights shows only the current month's board: work completed this month plus everything still open (open work carries over, as on the monthly sheets). The sidebar shows the month, the day and when it resets. On the 1st, the month that ended is archived (its tasks, summary and totals) and Insights reads closed months from the archive. A month that ends while nobody has the app open is closed on the next visit.
 
 Click any task anywhere to edit every column of its row. `N` adds a task, `⌘K` searches tasks, people and pillars.
 

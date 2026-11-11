@@ -69,7 +69,7 @@ export default function Sidebar() {
         <kbd>N</kbd>
       </button>
 
-      <button type="button" className="month-tile" onClick={() => go('compare')} title="Every page shows this month only. Past months are in Compare.">
+      <button type="button" className="month-tile" onClick={() => go('insights')} title="Every page shows this month only. Past months are in Insights.">
         <span className="mt-ic">
           <Icon name="calendar" size={18} />
         </span>

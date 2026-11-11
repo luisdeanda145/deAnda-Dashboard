@@ -1,143 +1,234 @@
+import { useState } from 'react'
 import Icon from '../components/Icon'
-import { Avatar, CardHead, PageHead, Prio, Stat } from '../components/ui'
-import { PRIORITIES, TEAM } from '../data/board'
-import { hrs, pts, todayISO } from '../lib/format'
-import { HYGIENE, dueBucket, hoursPerPoint, isDone, isOpen } from '../lib/selectors'
+import { MonthBars } from '../components/Charts'
+import { Avatar, CardHead, PageHead, Segmented, Select } from '../components/ui'
+import { PILLARS, TEAM } from '../data/board'
+import { fmtDay, fmtMonth, hrs, monthTick } from '../lib/format'
+import { monthStats, monthsWithData, shiftMonth } from '../lib/selectors'
 import { useApp } from '../lib/store'
 
-const sum = (l, f) => l.reduce((a, t) => a + (f(t) || 0), 0)
+/* the headline figures, each read off monthStats() */
+const KPIS = [
+  { key: 'hours', label: 'Hours logged', icon: 'clock', fmt: hrs, unit: 'hrs' },
+  { key: 'done', label: 'Tasks completed', icon: 'check', fmt: (v) => v },
+  { key: 'ptsDone', label: 'Story points done', icon: 'target', fmt: hrs },
+  { key: 'due', label: 'Tasks due', icon: 'calendar', fmt: (v) => v },
+  { key: 'onTime', label: 'Done on time', icon: 'flag', fmt: (v) => (v == null ? '—' : `${Math.round(v)}%`), points: true },
+  { key: 'people', label: 'People active', icon: 'users', fmt: (v) => v },
+]
 
-/** Analysis the sheet can’t show at a glance: estimates, priorities, due dates, data gaps. */
-export default function Insights() {
-  const { tasks, setPreset, go } = useApp()
-  const today = todayISO()
-  const both = tasks.filter((t) => isDone(t) && t.points > 0 && t.hours != null)
-  const rate = hoursPerPoint(tasks)
-  const buckets = ['Overdue', 'Today', 'This week', 'Later', 'No date'].map((b) => ({ b, list: tasks.filter((t) => dueBucket(t, today) === b) }))
-  const count = (b) => buckets.find((x) => x.b === b).list.length
-  const p0 = tasks.filter((t) => isOpen(t) && t.priority === 'P0')
-
-  /* how many hours a story point takes each person, on Done tasks with both */
-  const pace = TEAM.map((p) => {
-    const l = both.filter((t) => t.owner === p.name)
-    const points = sum(l, (t) => t.points)
-    const hours = sum(l, (t) => t.hours)
-    return { name: p.name, points, hours, rate: points ? hours / points : 0, n: l.length }
-  }).filter((x) => x.n)
-  const rMax = Math.max(0.01, ...pace.map((x) => x.rate))
-
-  const prios = [...PRIORITIES.map((p) => p.id), null].map((id) => {
-    const l = tasks.filter((t) => (t.priority || null) === id)
-    return { id, open: l.filter(isOpen).length, done: l.filter(isDone).length }
-  })
-  const prMax = Math.max(1, ...prios.map((p) => p.open + p.done))
-  const bMax = Math.max(1, ...buckets.map((b) => b.list.length))
-
-  const review = (id) => {
-    setPreset(id)
-    go('tasks')
+/** Change from b to a: "+12%", "−3 pts", "New" or "—". */
+function Delta({ a, b, points }) {
+  if (a == null || b == null) return <span className="delta flat">—</span>
+  if (points) {
+    const d = Math.round(a - b)
+    return <span className={`delta${d > 0 ? ' up' : d < 0 ? ' down' : ' flat'}`}>{d === 0 ? 'No change' : `${d > 0 ? '+' : '−'}${Math.abs(d)} pts`}</span>
   }
+  if (b === 0) return <span className={`delta${a > 0 ? ' new' : ' flat'}`}>{a > 0 ? 'New' : '—'}</span>
+  const d = ((a - b) / b) * 100
+  const r = Math.round(d)
+  return (
+    <span className={`delta${r > 0 ? ' up' : r < 0 ? ' down' : ' flat'}`}>
+      {r !== 0 && <Icon name={r > 0 ? 'up' : 'down'} size={12} stroke={2.2} />}
+      {r === 0 ? 'No change' : `${Math.abs(r)}%`}
+    </span>
+  )
+}
+
+/** Side-by-side table of one breakdown (people or pillars) for the two months. */
+function Breakdown({ by, icon, rows, a, b, metric, setMetric, renderName }) {
+  const title = `By ${by}`
+  const field = `${metric === 'Hours' ? 'hours' : 'done'}By${by}`
+  const fmt = metric === 'Hours' ? hrs : (v) => v
+  const val = (s, name) => s[field][name] || 0
+  const list = rows.map((name) => ({ name, a: val(a, name), b: val(b, name) })).sort((x, y) => y.a - x.a || y.b - x.b)
+  const max = Math.max(1, ...list.flatMap((r) => [r.a, r.b]))
+  return (
+    <article className="card table-card rise" style={{ '--d': 8 }}>
+      <CardHead title={title} icon={icon}>
+        <Segmented value={metric} options={['Hours', 'Tasks']} onChange={setMetric} />
+      </CardHead>
+      <div className="table-wrap">
+        <table className="table compact cmp-table">
+          <thead>
+            <tr>
+              <th>{by === 'Person' ? 'Owner' : 'Pillar'}</th>
+              <th className="cmp-bars-h">
+                <span>
+                  <i className="dot blue" /> {monthTick(a.ym)}
+                </span>
+                <span>
+                  <i className="ring" /> {monthTick(b.ym)}
+                </span>
+              </th>
+              <th className="num">{fmtMonth(a.ym)}</th>
+              <th className="num">{fmtMonth(b.ym)}</th>
+              <th className="num">Change</th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.map((r, i) => (
+              <tr key={r.name} style={{ '--i': i }}>
+                <td>{renderName(r.name)}</td>
+                <td className="cmp-bars">
+                  <span className="cmp-bar a" style={{ width: `${(r.a / max) * 100}%` }} />
+                  <span className="cmp-bar b" style={{ width: `${(r.b / max) * 100}%` }} />
+                </td>
+                <td className="num">
+                  <b>{fmt(r.a)}</b>
+                </td>
+                <td className="num">{fmt(r.b)}</td>
+                <td className="num">
+                  <Delta a={r.a} b={r.b} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Team</td>
+              <td />
+              <td className="num">{fmt(list.reduce((s, r) => s + r.a, 0))}</td>
+              <td className="num">{fmt(list.reduce((s, r) => s + r.b, 0))}</td>
+              <td className="num">
+                <Delta a={list.reduce((s, r) => s + r.a, 0)} b={list.reduce((s, r) => s + r.b, 0)} />
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </article>
+  )
+}
+
+/** Month over month: the reporting month against any earlier one. */
+export default function Insights() {
+  const { allTasks: tasks, archive, month } = useApp()
+  /* a closed month reads from its archived snapshot; the current month is live */
+  const statsFor = (ym) => (archive[ym] ? monthStats(archive[ym].tasks, ym) : monthStats(tasks, ym))
+  const sourceOf = (ym) => (ym === month ? 'Live · this month' : archive[ym] ? `Archived ${fmtDay(archive[ym].closedAt.slice(0, 10))}` : 'Not archived')
+  const [a, setA] = useState(month)
+  const [b, setB] = useState(() => shiftMonth(month, -1))
+  const [pin, setPin] = useState(5)
+  const [personMetric, setPersonMetric] = useState('Hours')
+  const [pillarMetric, setPillarMetric] = useState('Hours')
+
+  /* the last 12 months up to this one, every archived month, and any month that has dated work */
+  const options = [...new Set([...Array.from({ length: 12 }, (_, i) => shiftMonth(month, -i)), ...Object.keys(archive), ...monthsWithData(tasks)])]
+    .filter((m) => m <= month)
+    .sort()
+    .reverse()
+  const sa = statsFor(a)
+  const sb = statsFor(b)
+  const history = [...new Set([...Object.keys(archive), ...monthsWithData(tasks)])].filter((m) => m < a).sort().reverse()
+
+  /* six-month trend ending at month A */
+  const trend = Array.from({ length: 6 }, (_, i) => {
+    const ym = shiftMonth(a, i - 5)
+    const s = statsFor(ym)
+    return { m: monthTick(ym), ym, open: 0, closed: s.hours, done: s.done }
+  })
+
+  const people = [...new Set([...TEAM.map((p) => p.name), ...Object.keys(sa.hoursByPerson), ...Object.keys(sb.hoursByPerson)])]
+  const pillars = [...new Set([...PILLARS.map((p) => p.name), ...Object.keys(sa.hoursByPillar), ...Object.keys(sb.hoursByPillar)])]
+  const tone = (name) => PILLARS.find((p) => p.name === name)?.tone || 'mute'
 
   return (
     <>
-      <PageHead title="Insights" sub="How the board is really running" />
+      <PageHead title="Insights" sub="Month against month. Every other page shows only the current month; closed months are archived on the 1st and compared here.">
+        <Select value={a} options={options} onChange={setA} render={fmtMonth} />
+        <span className="cmp-vs">vs</span>
+        <Select value={b} options={options} onChange={setB} render={fmtMonth} />
+      </PageHead>
 
-      <div className="stats">
-        <Stat d={1} icon="target" label="Hours per story point" value={rate || 0} fmt={(v) => (rate == null ? '—' : `${hrs(v)}h`)} note={rate == null ? 'Shows once done tasks have story points' : `Across ${both.length} done tasks`} />
-        <Stat d={2} icon="alert" label="Open and overdue" value={count('Overdue')} fmt={(v) => Math.round(v)} tone={count('Overdue') ? 'red' : undefined} />
-        <Stat d={3} icon="calendar" label="Due in the next 7 days" value={count('Today') + count('This week')} fmt={(v) => Math.round(v)} />
-        <Stat d={4} icon="flag" label="P0s still open" value={p0.length} fmt={(v) => Math.round(v)} />
+      <div className="cmp-sources rise" style={{ '--d': 1 }}>
+        <span>
+          <i className="dot blue" /> <b>{fmtMonth(a)}</b> {sourceOf(a)}
+        </span>
+        <span>
+          <i className="ring" /> <b>{fmtMonth(b)}</b> {sourceOf(b)}
+        </span>
       </div>
 
-      <div className="ins-grid">
-        <article className="card rise" style={{ '--d': 5 }}>
-          <CardHead title="Hours per Story Point" />
-          <p className="muted-line">Done tasks with both story points and hours</p>
-          {pace.length === 0 && <p className="muted-line">Nothing yet. Give tasks story points and this fills in as they are closed.</p>}
-          <ul className="pairs">
-            {pace.map((x, i) => (
-              <li key={x.name} style={{ '--i': i }}>
-                <span className="who sm">
-                  <Avatar person={x.name} size={24} />
-                  {x.name}
-                </span>
-                <span className="pair-bars">
-                  <i className="pr" style={{ width: `${(x.rate / rMax) * 100}%` }} />
-                </span>
-                <span className="pair-n">
-                  <b>{hrs(x.rate)}h</b> / pt <em className="faint">· {pts(x.points)}</em>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </article>
+      {sb.empty && (
+        <p className="cmp-note card rise" style={{ '--d': 1 }}>
+          <Icon name="calendar" size={18} />
+          <span>
+            <b>No data for {fmtMonth(b)} yet.</b>{' '}
+            {history.length
+              ? `Months with history: ${history.map(fmtMonth).join(', ')}.`
+              : `The board starts in ${fmtMonth(monthsWithData(tasks).at(-1) || month)}, so there is nothing earlier to compare against. As each month closes, its completed work stays here and this page fills in.`}
+          </span>
+        </p>
+      )}
 
-        <article className="card rise" style={{ '--d': 6 }}>
-          <CardHead title="Due Date Health" />
-          <p className="muted-line">Open tasks by when they’re due</p>
-          <ul className="rep-funnel-list">
-            {buckets.map((b, i) => (
-              <li key={b.b} style={{ '--i': i }}>
-                <span>{b.b}</span>
-                <div className="funnel-track">
-                  <i className={b.b === 'Overdue' ? 'red' : b.b === 'No date' ? 'mute' : b.b === 'Later' ? 'sky' : 'blue'} style={{ width: `${(b.list.length / bMax) * 100}%` }} />
-                </div>
-                <b>{b.list.length}</b>
-                <small>{pts(sum(b.list, (t) => t.points))}</small>
-              </li>
-            ))}
-          </ul>
-        </article>
+      <div className="cmp-kpis">
+        {KPIS.map((k, i) => (
+          <article key={k.key} className="card cmp-kpi hl rise" style={{ '--d': i + 2 }}>
+            <header>
+              <span className="stat-ic">
+                <Icon name={k.icon} size={17} />
+              </span>
+              <small>{k.label}</small>
+              <Delta a={sa[k.key]} b={sb[k.key]} points={k.points} />
+            </header>
+            <div className="cmp-pair">
+              <div>
+                <strong className="figure">{k.fmt(sa[k.key])}</strong>
+                <span>{fmtMonth(a)}</span>
+              </div>
+              <div className="was">
+                <strong className="figure">{k.fmt(sb[k.key])}</strong>
+                <span>{fmtMonth(b)}</span>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
 
-        <article className="card rise" style={{ '--d': 7 }}>
-          <CardHead title="Priority Mix" />
-          <ul className="prio-rows">
-            {prios.map((p, i) => (
-              <li key={p.id || 'none'} style={{ '--i': i }}>
-                <Prio p={p.id} />
-                <span className="ws-track">
-                  <i className="ws-done" style={{ width: `${(p.done / prMax) * 100}%` }} />
-                  <i className="ws-open" style={{ width: `${(p.open / prMax) * 100}%` }} />
-                </span>
-                <span className="ws-n">
-                  {p.open} open <em className="faint">· {p.done} done</em>
-                </span>
-              </li>
-            ))}
-          </ul>
-          <div className="legend">
-            <span>
-              <i className="dot teal" /> Done
+      <article className="card hl rise" style={{ '--d': 8 }}>
+        <CardHead title={`Hours logged, 6 months to ${fmtMonth(a)}`} icon="chart" />
+        <MonthBars
+          data={trend}
+          pinned={pin}
+          onPin={setPin}
+          fmt={hrs}
+          labels={{ open: null, closed: 'hrs logged' }}
+          tipTitle={(d) => `${fmtMonth(d.ym)} · ${d.done} done`}
+        />
+      </article>
+
+      <div className="cmp-tables">
+        <Breakdown
+          by="Person"
+          icon="users"
+          rows={people}
+          a={sa}
+          b={sb}
+          metric={personMetric}
+          setMetric={setPersonMetric}
+          renderName={(n) => (
+            <span className="who sm">
+              <Avatar person={n} size={24} />
+              {n}
             </span>
-            <span>
-              <i className="ring" /> Open
+          )}
+        />
+        <Breakdown
+          by="Pillar"
+          icon="layers"
+          rows={pillars}
+          a={sa}
+          b={sb}
+          metric={pillarMetric}
+          setMetric={setPillarMetric}
+          renderName={(n) => (
+            <span className="who sm">
+              <i className={`dot ${tone(n)}`} />
+              {n}
             </span>
-          </div>
-        </article>
-
-        <article className="card rise" style={{ '--d': 8 }}>
-          <CardHead title="Data Hygiene" icon="sparkle" />
-          <p className="muted-line">Rows the sheet’s formulas can’t count properly</p>
-          <ul className="hyg">
-            {HYGIENE.map((h) => {
-              const n = tasks.filter(h.test).length
-              return (
-                <li key={h.id}>
-                  <span className={`hyg-n${n ? '' : ' ok'}`}>{n ? n : <Icon name="check" size={14} stroke={2.6} />}</span>
-                  <div>
-                    <b>{h.label}</b>
-                    <small>{h.hint}</small>
-                  </div>
-                  {n > 0 && (
-                    <button type="button" className="chip" onClick={() => review(h.id)}>
-                      Review
-                    </button>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
-        </article>
+          )}
+        />
       </div>
     </>
   )

@@ -25,7 +25,6 @@ import Team from './pages/Team'
 import Hours from './pages/Hours'
 import Insights from './pages/Insights'
 import Settings from './pages/Settings'
-import Compare from './pages/Compare'
 import ManageSheet from './components/ManageSheet'
 import Guide from './pages/Guide'
 
@@ -38,7 +37,6 @@ const VIEWS = {
   team: Team,
   hours: Hours,
   insights: Insights,
-  compare: Compare,
   settings: Settings,
   guide: Guide,
 }
@@ -103,7 +101,7 @@ export default function App() {
     setToasts((all) => [...all.slice(-2), { id, ...t }])
     setTimeout(() => setToasts((all) => all.filter((x) => x.id !== id)), 3200)
   }, [])
-  const announceClosed = useCallback((ym) => toast({ icon: 'calendar', title: `${fmtMonth(ym)} closed`, text: 'Archived for Compare · a new month’s board has started' }), [toast])
+  const announceClosed = useCallback((ym) => toast({ icon: 'calendar', title: `${fmtMonth(ym)} closed`, text: 'Archived for Insights · a new month’s board has started' }), [toast])
 
   /* months that ended while nobody had the app open were closed at start-up; say so once */
   useEffect(() => {
@@ -144,7 +142,7 @@ export default function App() {
     }
   }, [announceClosed])
 
-  /* the board is always this calendar month's; past months are in Compare */
+  /* the board is always this calendar month's; past months are in Insights */
   const month = today.slice(0, 7)
   const board = useMemo(() => boardTasks(tasks, month), [tasks, month])
 
@@ -349,7 +347,7 @@ export default function App() {
       setSide,
       right,
       setRight,
-      tasks: board, // this month's board: what every page except Compare shows
+      tasks: board, // this month's board: what every page except Insights shows
       allTasks: tasks,
       archive,
       addTask,

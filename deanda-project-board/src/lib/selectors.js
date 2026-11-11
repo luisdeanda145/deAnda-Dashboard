@@ -243,7 +243,7 @@ export function monthsWithData(tasks) {
    board: the work completed that month plus everything still
    open, which carries over from month to month. Completed work
    from earlier months leaves the board and lives in the archive
-   (see closeMonth and src/lib/api.js), which Compare reads.
+   (see closeMonth and src/lib/api.js), which Insights reads.
    ============================================================ */
 
 /** Is a task on month ym's board? */

@@ -52,7 +52,7 @@ export default function Settings() {
             <div>
               <b>Reporting month</b>
               <small>
-                Every page except Compare shows {fmtMonth(month)} only. On {fmtDay(`${shiftMonth(month, 1)}-01`)} the board resets: this month is archived for Compare and open tasks carry over.
+                Every page except Insights shows {fmtMonth(month)} only. On {fmtDay(`${shiftMonth(month, 1)}-01`)} the board resets: this month is archived for Insights and open tasks carry over.
               </small>
             </div>
             <span className="status tone-blue">{fmtMonth(month)}</span>
@@ -62,8 +62,8 @@ export default function Settings() {
               <b>Archived months</b>
               <small>{Object.keys(archive).length ? Object.keys(archive).sort().reverse().map(fmtMonth).join(', ') : 'None yet. The first one is archived when this month ends.'}</small>
             </div>
-            <button type="button" className="chip" onClick={() => go('compare')}>
-              Compare
+            <button type="button" className="chip" onClick={() => go('insights')}>
+              Insights
             </button>
           </div>
           <div className="set-row">
