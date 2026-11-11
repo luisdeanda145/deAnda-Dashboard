@@ -1,0 +1,460 @@
+/* ============================================================
+   Phones (iPhone and similar). Everything here sits inside one
+   max-width: 640px query, so wider windows and the desktop
+   layout are untouched. Builds on the flat layout in space.css.
+   ============================================================ */
+
+/* the bottom tab bar only exists on phones */
+.phone-tabs {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --tabbar: calc(64px + env(safe-area-inset-bottom));
+  }
+
+  /* ---------------- shell ---------------- */
+  [data-layout='flat'] .space {
+    gap: 12px;
+    padding: calc(10px + env(safe-area-inset-top)) 10px calc(var(--tabbar) + 18px);
+  }
+  /* top bar: logo, the month, new task. Pages move to the tab bar. */
+  [data-layout='flat'] .side {
+    gap: 8px;
+    padding: 7px;
+    border-radius: 24px;
+  }
+  [data-layout='flat'] .side .nav {
+    display: none;
+  }
+  [data-layout='flat'] .side .ws img {
+    width: 36px;
+    height: 36px;
+  }
+  .side .month-tile {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 6px 10px;
+  }
+  .side .month-tile .mt-ic {
+    width: 30px;
+    height: 30px;
+  }
+  [data-layout='flat'] .side .new-task {
+    order: 3;
+  }
+  [data-layout='flat'] .main {
+    border-radius: 26px;
+  }
+  [data-layout='flat'] .page-scroll {
+    padding: 18px 14px 22px;
+  }
+  /* nothing may push the page sideways; wide content scrolls inside its own card */
+  .page {
+    overflow-x: clip;
+  }
+  /* the right-hand widgets only on the Overview, after its cards */
+  .space:not([data-page='overview']) > .right {
+    display: none;
+  }
+  [data-layout='flat'] .right {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  [data-layout='flat'] .toasts {
+    bottom: calc(var(--tabbar) + 12px);
+  }
+
+  /* ---------------- tab bar ---------------- */
+  .phone-tabs {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: calc(6px + env(safe-area-inset-bottom));
+    z-index: 60;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    height: 60px;
+    padding: 4px;
+    border-radius: 26px;
+    background: rgb(34 30 27 / 0.96);
+    backdrop-filter: blur(24px) saturate(1.6);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.12),
+      0 14px 34px -12px rgb(0 0 0 / 0.6);
+  }
+  .pt-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border-radius: 20px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--muted);
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+  }
+  .pt-item.on {
+    color: var(--ink);
+    background: rgb(255 255 255 / 0.12);
+  }
+  .pt-ic {
+    position: relative;
+    display: grid;
+    place-items: center;
+  }
+  .pt-ic b {
+    position: absolute;
+    top: -5px;
+    left: 14px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: var(--blue);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .pt-ic b.warn {
+    background: #e5484d;
+  }
+  .phone-more {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 8px);
+    width: 210px;
+    padding: 6px;
+    border-radius: 20px;
+    background: rgb(36 32 28 / 0.94);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.12),
+      0 18px 40px -14px rgb(0 0 0 / 0.7);
+    animation: rise 0.25s var(--ease);
+  }
+  .phone-more button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    height: 46px;
+    padding: 0 14px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .phone-more button.on {
+    background: rgb(255 255 255 / 0.12);
+  }
+
+  /* ---------------- iOS: no zoom when tapping a field ---------------- */
+  input,
+  textarea,
+  select,
+  .text-in,
+  .date-in,
+  .search input,
+  .add-task input,
+  .field textarea,
+  .ts-title {
+    font-size: 16px !important;
+  }
+
+  /* ---------------- headings and toolbars ---------------- */
+  .page-head {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .page-head h1 {
+    font-size: 30px;
+  }
+  .page-tools {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .page-tools .search {
+    flex: 1 1 100%;
+  }
+  .filter-bar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .filters {
+    flex-wrap: wrap;
+  }
+
+  /* ---------------- task rows: two lines so titles can be read ---------------- */
+  .task {
+    flex-wrap: wrap;
+    row-gap: 8px;
+    padding: 12px 14px;
+  }
+  .task-body {
+    flex: 1 1 calc(100% - 60px);
+  }
+  .task-body b {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.3;
+  }
+  .task .task-hrs {
+    display: flex;
+    flex-direction: row;
+    width: auto;
+    gap: 8px;
+    margin-left: auto;
+  }
+  .task .t-dates.t-stacked {
+    flex-direction: row;
+    gap: 10px;
+    min-width: 0;
+  }
+  .task > .status,
+  .task > .done-badge {
+    order: 2;
+  }
+  .task > .task-hrs,
+  .task > .t-dates {
+    order: 3;
+  }
+  .week-group h2 {
+    flex-wrap: wrap;
+    font-size: 15px;
+  }
+  .week-group h2 .fold-btn {
+    margin-left: auto;
+  }
+
+  /* ---------------- overview ---------------- */
+  .ov-grid {
+    gap: 12px;
+  }
+  /* the daily tracker keeps every day readable and scrolls sideways */
+  .heat-card {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .heat-card .heat {
+    min-width: 620px;
+  }
+  .heat-card .card-head {
+    position: sticky;
+    left: 0;
+  }
+  .ws-bars li {
+    grid-template-columns: 112px minmax(0, 1fr) 36px 44px;
+  }
+  .ws-bars .ws-h {
+    display: block;
+  }
+
+  /* ---------------- board: swipe between lanes ---------------- */
+  .board.kanban {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 84%;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    margin: 0 -14px;
+    padding: 0 14px;
+  }
+  .board.kanban .lane {
+    scroll-snap-align: center;
+  }
+
+  /* ---------------- all tasks: each row becomes a card ---------------- */
+  .tasks-table,
+  .tasks-table tbody {
+    display: block;
+  }
+  .tasks-table thead tr {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 4px 2px 10px;
+  }
+  .tasks-table thead th {
+    height: auto;
+    padding: 0 !important;
+    flex-shrink: 0;
+  }
+  .tasks-table thead th button {
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: var(--fill);
+  }
+  .tasks-table thead th button svg {
+    opacity: 0.8;
+  }
+  .tasks-table tbody tr:not(.day-row) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 12px;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgb(255 255 255 / 0.08);
+  }
+  .tasks-table tbody tr:not(.day-row) td {
+    height: auto;
+    padding: 0 !important;
+    border: 0;
+  }
+  .tasks-table td.t-title {
+    grid-column: 1 / -1;
+    max-width: none;
+  }
+  .tasks-table td.t-title b {
+    white-space: normal;
+  }
+  .tasks-table td:nth-child(2) {
+    grid-column: 1;
+  }
+  .tasks-table td:nth-child(5) {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+  }
+  .tasks-table td.t-pillar {
+    grid-column: 1;
+  }
+  .tasks-table td.t-pillar em {
+    max-width: none;
+  }
+  .tasks-table td.t-date-cell {
+    grid-column: 2;
+    grid-row: 3;
+    justify-self: end;
+  }
+  .tasks-table td:nth-child(4) {
+    grid-column: 1;
+  }
+  .tasks-table td:nth-child(7) {
+    display: none;
+  }
+  .tasks-table td:nth-child(8) {
+    grid-column: 2;
+    grid-row: 4;
+    justify-self: end;
+  }
+  .tasks-table td:nth-child(8)::before {
+    content: 'Hrs ';
+    color: var(--muted);
+  }
+  .tasks-table tr.row-done {
+    box-shadow: inset 3px 0 0 var(--teal);
+  }
+  .tasks-table tr.row-done td:first-child {
+    box-shadow: none;
+  }
+  .tasks-table tr.day-row,
+  .tasks-table tr.day-row td {
+    display: block;
+  }
+  .tasks-table tr.day-row td {
+    padding: 10px 14px 8px;
+  }
+
+  /* ---------------- pillars: the list becomes a swipeable strip ---------------- */
+  .pl-list {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    margin: 0 -14px 4px;
+    padding: 2px 14px 8px;
+  }
+  .pl-list li {
+    flex: 0 0 172px;
+    scroll-snap-align: start;
+  }
+  .pl-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* ---------------- insights ---------------- */
+  .cmp-kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cmp-pair strong {
+    font-size: 26px;
+  }
+  .page-tools .cmp-vs {
+    align-self: center;
+  }
+
+  /* ---------------- team ---------------- */
+  .team-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* ---------------- settings: no hover on touch, so show the remove buttons ---------------- */
+  .x-btn {
+    opacity: 0.65;
+  }
+  .set-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .set-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .roster {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pw-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* ---------------- sheets (task, add member…) ---------------- */
+  [data-layout='flat'] .sheet-wrap {
+    align-items: flex-end;
+    padding: 0;
+    background: rgb(10 8 6 / 0.5);
+  }
+  /* a sheet is solid on a phone, and the tab bar steps aside while one is open */
+  [data-layout='flat'] .sheet {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 40%),
+      rgb(42 37 33);
+  }
+  .stage.sheet-open .phone-tabs {
+    display: none;
+  }
+  [data-layout='flat'] .sheet.task-sheet {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top));
+    padding: 20px 16px calc(18px + env(safe-area-inset-bottom));
+    border-radius: 28px 28px 0 0;
+  }
+  .ts-status .seg button {
+    padding: 0 6px;
+    font-size: 13px;
+  }
+  .ts-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .task-sheet footer {
+    flex-wrap: wrap;
+  }
+  .task-sheet footer .ts-rule {
+    flex: 1 1 100%;
+    order: -1;
+  }
+}

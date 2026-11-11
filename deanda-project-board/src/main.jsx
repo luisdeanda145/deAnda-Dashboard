@@ -5,6 +5,7 @@ import './styles/space.css'
 import './styles/overview.css'
 import './styles/pages.css'
 import './styles/board.css'
+import './styles/phone.css'
 import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(

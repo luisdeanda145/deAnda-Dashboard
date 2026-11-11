@@ -13,6 +13,7 @@ import Grabber from './components/Grabber'
 import Palette from './components/Palette'
 import TaskSheet from './components/TaskSheet'
 import Toasts from './components/Toasts'
+import PhoneTabs from './components/PhoneTabs'
 import HoursWidget from './widgets/HoursWidget'
 import QueueWidget from './widgets/QueueWidget'
 import HoursByDayWidget from './widgets/HoursByDayWidget'
@@ -379,7 +380,7 @@ export default function App() {
     <AppContext.Provider value={ctx}>
       <main ref={stage} className={`stage${sheet ? ' sheet-open' : ''}`} data-layout={spatial ? 'spatial' : 'flat'}>
         <Environment />
-        <div className={`space${side ? '' : ' no-side'}${right ? '' : ' no-right'}${booting ? ' booting' : ''}`}>
+        <div className={`space${side ? '' : ' no-side'}${right ? '' : ' no-right'}${booting ? ' booting' : ''}`} data-page={page}>
           <Sidebar />
 
           <section className="win main" aria-label={label}>
@@ -402,6 +403,7 @@ export default function App() {
         {sheet === 'palette' && <Palette onClose={() => setSheet(null)} />}
         {sheet?.manage && <ManageSheet what={sheet.manage} pillar={sheet.pillar} onClose={() => setSheet(null)} />}
         {sheet?.task && <TaskSheet key={sheet.task.id || 'new'} task={sheet.task} hint={sheet.hint} onClose={() => setSheet(null)} />}
+        <PhoneTabs />
         <Toasts items={toasts} />
       </main>
     </AppContext.Provider>
