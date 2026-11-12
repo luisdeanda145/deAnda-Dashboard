@@ -81,7 +81,7 @@ export default function Announcement({ onDone }) {
         <h3 className="an-h">Set it up (about 5 minutes)</h3>
         <ol className="an-steps">
           <li>
-            In <b>Claude</b>, open <b>Settings → Connectors</b> and connect <b>Supabase</b> and <b>Google Drive</b>. Sign in with your @deanda.capital account.
+            In <b>Claude</b>, open <b>Settings → Connectors</b> and connect <b>Supabase</b>. Sign in with your @deanda.capital account.
           </li>
           <li>
             Go back to <b>Claude</b> and create a new <b>Project</b> (call it “Project Board”).
@@ -91,7 +91,7 @@ export default function Announcement({ onDone }) {
           </li>
         </ol>
         <p className="an-note">
-          <Icon name="help" size={15} /> If Supabase doesn’t show the “Project Board” project, message me and I’ll add you.
+          <Icon name="help" size={15} /> If Supabase doesn’t show the “Project Board” project, message me.
         </p>
 
         <div className="an-prompt">
