@@ -74,7 +74,8 @@ function TodayCard({ tasks }) {
   const notStarted = list.filter((t) => t.status === 'Not started').length
   const blocked = list.filter((t) => t.status === 'Blocked').length
   const open = list.length - done.length
-  const hours = done.reduce((a, t) => a + (t.hours || 0), 0)
+  /* hours count on the day the task was finished (as in Hours By Day), not the day it was due */
+  const hours = done.filter((t) => t.completed === today).reduce((a, t) => a + (t.hours || 0), 0)
   const n = useCountUp(done.length, 1000, 350)
   const total = list.length || 1
   const a = (done.length / total) * 100
