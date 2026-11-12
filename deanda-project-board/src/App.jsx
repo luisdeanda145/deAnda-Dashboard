@@ -506,7 +506,7 @@ export default function App() {
   if (api.connected && (!session || outsider)) {
     return (
       <main className="stage signin-stage" data-layout={spatial ? 'spatial' : 'flat'}>
-        <Environment />
+        <Environment today={today} />
         <SignIn checking={session === undefined} outsider={outsider} />
       </main>
     )
@@ -515,7 +515,7 @@ export default function App() {
   return (
     <AppContext.Provider value={ctx}>
       <main ref={stage} className={`stage${sheet ? ' sheet-open' : ''}`} data-layout={spatial ? 'spatial' : 'flat'}>
-        <Environment />
+        <Environment today={today} />
         <div className={`space${side ? '' : ' no-side'}${right ? '' : ' no-right'}${booting ? ' booting' : ''}`} data-page={page}>
           <Sidebar />
 
