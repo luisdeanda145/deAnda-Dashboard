@@ -30,7 +30,7 @@ export default function AssistantPanel({ onClose }) {
       <div className="as-body">
         <div className="as-empty">
           <b>Under construction</b>
-          <p>The assistant isn’t connected yet. Soon you’ll be able to ask it to add tasks, log hours, or pull action items from a doc, right here.</p>
+          <p>Coming soon: quick summaries of your tasks, hours and the team’s week.</p>
         </div>
       </div>
 
