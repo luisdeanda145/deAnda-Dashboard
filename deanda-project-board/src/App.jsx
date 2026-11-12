@@ -130,7 +130,7 @@ export default function App() {
     async (who) => {
       if (!api.connected) return
       try {
-        const [t, d, a, m] = await Promise.all([api.fetchTasks(), api.fetchDirectory(), api.fetchArchive(), api.fetchMessages()])
+        const [t, d, a, m] = await Promise.all([api.fetchTasks(), api.fetchDirectory(), api.fetchArchive(), api.fetchMessages().catch(() => [])])
         setTasks(t)
         if (d) setDir(d)
         setArchive(a)
