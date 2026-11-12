@@ -747,3 +747,183 @@
 [data-motion='off'] .online-dot {
   animation: none;
 }
+
+/* ---------------- My Open Tasks + the assistant orb, side by side ---------------- */
+.queue-row {
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+.queue-row > .credits {
+  flex: 1;
+  min-width: 0;
+}
+.orb-tile {
+  flex: 0 0 84px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+}
+.orb-tile canvas {
+  position: relative;
+  z-index: 1;
+}
+/* the narrower My Open Tasks keeps everything on tidy lines */
+.queue-row .credits {
+  padding: 18px 18px 16px;
+}
+.queue-row .credits .card-head h3 {
+  white-space: nowrap;
+}
+.queue-row .credits .used {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.queue-row .next-up {
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'label date'
+    'title title';
+  row-gap: 3px;
+}
+.queue-row .next-up span {
+  grid-area: label;
+}
+.queue-row .next-up em {
+  grid-area: date;
+  justify-self: end;
+  white-space: nowrap;
+  font-size: 11.5px;
+}
+.queue-row .next-up b {
+  grid-area: title;
+}
+
+/* ---------------- the AI assistant: opens over the whole right column ---------------- */
+.right {
+  position: relative;
+}
+.right.assistant-open > :not(.assistant-panel) {
+  opacity: 0;
+  pointer-events: none;
+}
+.assistant-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  animation: assistIn 0.5s var(--spring);
+  transform-origin: 70% 45%;
+}
+.assistant-panel > * {
+  animation: none;
+}
+@keyframes assistIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+.as-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 2px 2px 14px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.as-head h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.as-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: rgba(255, 196, 92, 0.16);
+  color: #ffd38a;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.as-close {
+  margin-left: auto;
+  width: 30px;
+  height: 30px;
+}
+.as-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 14px 6px;
+}
+.as-empty {
+  text-align: center;
+}
+.as-empty b {
+  display: block;
+  font-family: var(--serif);
+  font-variation-settings: 'SOFT' 40, 'WONK' 0;
+  font-weight: 400;
+  font-size: 22px;
+}
+.as-empty p {
+  margin: 8px auto 0;
+  max-width: 250px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.as-compose {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 22px;
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+.as-compose:focus-within {
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.4);
+}
+.as-compose textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 38px;
+  max-height: 120px;
+  padding: 9px 8px;
+  border: 0;
+  background: none;
+  resize: none;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink);
+  outline: 0;
+  field-sizing: content;
+}
+.as-compose .cta {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  flex-shrink: 0;
+}
+.as-compose .cta:disabled {
+  opacity: 0.4;
+  transform: none;
+  filter: none;
+}
+[data-layout='flat'] .assistant-panel {
+  min-height: 420px;
+}

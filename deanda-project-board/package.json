@@ -13,7 +13,8 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.119.0",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "thinking-orbs": "^0.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

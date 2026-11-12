@@ -21,6 +21,8 @@ import SignIn from './components/SignIn'
 import { TEAM_DOMAIN } from './lib/supabase'
 import HoursWidget from './widgets/HoursWidget'
 import QueueWidget from './widgets/QueueWidget'
+import AssistantOrb from './widgets/AssistantOrb'
+import AssistantPanel from './widgets/AssistantPanel'
 import HoursByDayWidget from './widgets/HoursByDayWidget'
 import Overview from './pages/Overview'
 import MyWork from './pages/MyWork'
@@ -96,6 +98,7 @@ export default function App() {
   const [side, setSide] = useState(true)
   const [right, setRight] = useState(true)
   const [sheet, setSheet] = useState(null) // 'palette' | { task } | null
+  const [assistant, setAssistant] = useState(false) // the AI assistant over the right column
   const [toasts, setToasts] = useState([])
   const [booting, setBooting] = useState(true)
   const [spatial, setSpatial] = useState(() => innerWidth >= SPATIAL_MIN)
@@ -619,10 +622,14 @@ export default function App() {
             </div>
           </section>
 
-          <aside className="facet right" aria-label="Widgets">
+          <aside className={`facet right${assistant ? ' assistant-open' : ''}`} aria-label="Widgets">
             <HoursWidget />
-            <QueueWidget />
+            <div className="queue-row">
+              <QueueWidget />
+              <AssistantOrb onOpen={() => setAssistant(true)} />
+            </div>
             <HoursByDayWidget />
+            {assistant && <AssistantPanel onClose={() => setAssistant(false)} />}
           </aside>
 
           <Grabber />

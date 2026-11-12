@@ -465,6 +465,19 @@
     scroll-margin: 12px 0 calc(var(--tabbar) + 18px);
   }
 
+  /* ---------------- AI assistant: full screen above the tab bar ---------------- */
+  [data-layout='flat'] .right.assistant-open {
+    transform: none;
+  }
+  .assistant-panel {
+    position: fixed;
+    inset: calc(10px + env(safe-area-inset-top)) 10px calc(var(--tabbar) + 14px);
+    z-index: 55;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 40%),
+      rgb(42 37 33);
+  }
+
   /* ---------------- team ---------------- */
   .team-grid {
     grid-template-columns: minmax(0, 1fr);
