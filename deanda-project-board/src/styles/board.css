@@ -490,8 +490,32 @@
   font-size: 11.5px;
   line-height: 1.35;
 }
+/* a blocked card's reason shows only while the pointer is on the card */
+.tcard .tcard-note {
+  display: none;
+}
+.tcard:hover .tcard-note,
+.tcard:focus-within .tcard-note {
+  display: block;
+  animation: noteIn 0.2s var(--ease);
+}
+@keyframes noteIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+/* cards are narrow: the footer wraps instead of spilling out of the card */
 .tcard footer {
-  gap: 9px;
+  flex-wrap: wrap;
+  gap: 6px 9px;
+}
+.tcard footer .t-dates {
+  flex-shrink: 1;
+  min-width: 0;
+}
+.tcard footer .t-dates span {
+  white-space: normal;
 }
 .deal footer .late {
   color: var(--red);
