@@ -115,7 +115,7 @@ export default function Settings() {
             <Switch on={settings.sound} onChange={(sound) => { set({ sound }); if (sound) setTimeout(() => play('tab'), 0) }} label="Sounds" />
           </div>
           {settings.sound && (
-            <Slider label="Sound volume" value={settings.volume} min={5} max={100} step={5} unit="%" onChange={(volume) => set({ volume })} />
+            <Slider label="Sound volume" value={settings.soundVolume} min={5} max={100} step={5} unit="%" onChange={(soundVolume) => set({ soundVolume })} />
           )}
           <div className="set-row">
             <div>

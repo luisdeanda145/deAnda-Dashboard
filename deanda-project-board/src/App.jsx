@@ -384,7 +384,7 @@ export default function App() {
     root.style.setProperty('--frost', `${settings.frost}px`)
     root.style.setProperty('--tint', settings.tint / 100)
     root.style.setProperty('--bg-blur', `${settings.bgBlur}px`)
-    setSoundPrefs(settings.sound, settings.volume / 100)
+    setSoundPrefs(settings.sound, settings.soundVolume / 100)
   }, [settings])
 
   const toTop = () => {

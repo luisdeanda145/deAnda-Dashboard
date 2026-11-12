@@ -11,7 +11,7 @@ const FILES = { tab: '/sounds/tab-select.mp3', added: '/sounds/task-added.mp3' }
 
 let ctx = null
 const buffers = {}
-let prefs = { on: true, volume: 0.5 }
+let prefs = { on: true, volume: 0.3 }
 
 /** Settings → Sounds calls this whenever the switch or slider changes. */
 export function setSoundPrefs(on, volume) {
