@@ -7,6 +7,7 @@ import { fmtMonth, todayISO } from './lib/format'
 import { boardTasks, closeMonth, endedTasks, onBoard, shiftMonth } from './lib/selectors'
 import { DEFAULTS } from './lib/settings'
 import { play, setSoundPrefs } from './lib/sound'
+import { seasonFor } from './lib/season'
 import Environment from './components/Environment'
 import Sidebar from './components/Sidebar'
 import { PAGES } from './data/pages'
@@ -242,6 +243,11 @@ export default function App() {
       document.removeEventListener('visibilitychange', check)
     }
   }, [announceClosed, reload])
+
+  /* the season themes the whole page (background + Christmas colours), and moves on at midnight */
+  useEffect(() => {
+    document.documentElement.dataset.season = seasonFor(today)
+  }, [today])
 
   /* the board is always this calendar month's; past months are in Insights */
   const month = today.slice(0, 7)

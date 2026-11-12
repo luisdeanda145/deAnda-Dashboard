@@ -1,0 +1,85 @@
+/* ============================================================
+   Christmas theme — on whenever the Christmas background is
+   (December, see src/lib/season.js): the blue accents, buttons
+   and the Hours Logged card turn a deep Christmas red. The
+   "In progress" data colour turns green instead of red, so it
+   stays distinct from "Blocked".
+   ============================================================ */
+[data-season='christmas'] {
+  --blue: #c8102e;
+  --blue-hi: #ff6b7f;
+  --xmas-green: #4cc38a;
+}
+
+/* buttons */
+[data-season='christmas'] .cta:not(.ghost),
+[data-season='christmas'] .new-task {
+  background: linear-gradient(180deg, #e2384e, #a50d25);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 10px 24px -10px rgba(200, 16, 46, 0.9);
+}
+
+/* the Hours Logged card: deep red glass, warm clouds */
+[data-season='christmas'] .contacts::before {
+  background: linear-gradient(168deg, rgb(226 70 88 / 0.9) 0%, rgb(178 22 46 / 0.92) 50%, rgb(110 8 26 / 0.94) 100%);
+}
+[data-season='christmas'] .cloud:nth-child(1) {
+  --c: rgb(255 236 238 / 0.7) !important;
+}
+[data-season='christmas'] .cloud:nth-child(2) {
+  --c: rgb(255 150 160 / 0.6) !important;
+}
+[data-season='christmas'] .cloud:nth-child(3) {
+  --c: rgb(90 4 20 / 0.6) !important;
+}
+[data-season='christmas'] .cloud:nth-child(4) {
+  --c: rgb(255 210 215 / 0.55) !important;
+}
+[data-season='christmas'] .cloud:nth-child(5) {
+  --c: rgb(240 110 125 / 0.55) !important;
+}
+[data-season='christmas'] .cloud:nth-child(6) {
+  --c: rgb(255 240 225 / 0.5) !important;
+}
+[data-season='christmas'] .cloud:nth-child(7) {
+  --c: rgb(255 190 170 / 0.45) !important;
+}
+
+/* small blue-tinted surfaces */
+[data-season='christmas'] .mt-ic {
+  background: rgba(255, 107, 127, 0.2);
+}
+[data-season='christmas'] .tag-blue {
+  background: rgba(200, 16, 46, 0.22);
+}
+
+/* data: "In progress" goes green so it never reads as "Blocked" */
+[data-season='christmas'] .dot.blue,
+[data-season='christmas'] .mini-stack .blue,
+[data-season='christmas'] .tick.blue,
+[data-season='christmas'] .stack-seg.blue,
+[data-season='christmas'] .funnel-track .blue {
+  background: var(--xmas-green);
+}
+[data-season='christmas'] .arc.blue {
+  stroke: var(--xmas-green);
+}
+[data-season='christmas'] .status.tone-blue {
+  color: #9fe3c0;
+  background: rgba(76, 195, 138, 0.2);
+}
+
+/* the daily hours grid: red squares, deeper for more hours */
+[data-season='christmas'] .heat-cell {
+  background: rgba(230, 60, 82, calc(0.12 + var(--a, 0) * 0.88));
+}
+[data-season='christmas'] .heat-cell.zero {
+  background: rgba(255, 255, 255, 0.05);
+}
+[data-season='christmas'] .heat-cell.future {
+  background: transparent;
+}
+[data-season='christmas'] .heat-bar em {
+  background: linear-gradient(180deg, var(--xmas-green), rgba(76, 195, 138, 0.5));
+}
