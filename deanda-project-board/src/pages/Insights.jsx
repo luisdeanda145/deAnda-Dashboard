@@ -105,7 +105,12 @@ function Breakdown({ by, icon, rows, a, b, metric, setMetric, renderName }) {
 export default function Insights() {
   const { allTasks: tasks, archive, month } = useApp()
   /* a closed month reads from its archived snapshot; the current month is live */
-  const statsFor = (ym) => (archive[ym] ? monthStats(archive[ym].tasks, ym) : monthStats(tasks, ym))
+  /* closed months read their saved totals; older saves that still carry task rows are recomputed */
+  const statsFor = (ym) => {
+    const a = archive[ym]
+    if (!a) return monthStats(tasks, ym)
+    return a.stats ? { ...monthStats([], ym), ...a.stats } : monthStats(a.tasks || [], ym)
+  }
   const sourceOf = (ym) => (ym === month ? 'Live · this month' : archive[ym] ? `Archived ${fmtDay(archive[ym].closedAt.slice(0, 10))}` : 'Not archived')
   const [a, setA] = useState(month)
   const [b, setB] = useState(() => shiftMonth(month, -1))

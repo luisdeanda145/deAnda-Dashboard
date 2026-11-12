@@ -63,10 +63,33 @@ export async function deleteTask(id) {
   return latency({ id })
 }
 
+/** DELETE /tasks  — body: { ids } — the completed tasks a new month clears */
+export async function deleteTasks(ids) {
+  if (API_URL) {
+    // await fetch(`${API_URL}/tasks`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) })
+  }
+  return latency({ ids })
+}
+
 /* ---------------- month archive ----------------
-   When a month ends, its board (completed work plus what was still
-   open) and its totals are sent here; Insights reads them back.
-   Until the backend exists they are kept in this browser. */
+   When a month ends, only its totals are saved here; the completed
+   tasks themselves are deleted (deleteTasks) and open ones carry
+   over. Insights reads these totals back. Until the backend exists
+   they are kept in this browser.
+
+   One row per closed month, e.g. a `months` table:
+   {
+     month:    'YYYY-MM'                 primary key
+     closedAt: ISO timestamp
+     summary:  { tasks, open, closed, inProgress, notStarted, blocked,
+                 pointsPlanned, pointsDone }        board at month end
+     stats:    { ym, done, hours, ptsDone, hrsPerPt, due, duePts, onTime,
+                 people, empty,
+                 hoursByPerson: { name: hrs }, doneByPerson: { name: n },
+                 hoursByPillar: { name: hrs }, doneByPillar: { name: n } }
+   }
+   The by-person / by-pillar maps can live in JSON columns or in their
+   own month_person / month_pillar tables. */
 const ARCHIVE_KEY = 'dac-board-archive'
 const readArchive = () => {
   try {
@@ -76,7 +99,7 @@ const readArchive = () => {
   }
 }
 
-/** POST /months/:ym/close  — body: { month, closedAt, tasks, summary, stats } */
+/** POST /months/:ym/close  — body: { month, closedAt, summary, stats } */
 export async function archiveMonth(snapshot) {
   if (API_URL) {
     // await fetch(`${API_URL}/months/${snapshot.month}/close`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(snapshot) })

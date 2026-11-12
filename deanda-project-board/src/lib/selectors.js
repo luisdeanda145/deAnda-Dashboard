@@ -222,11 +222,11 @@ export function monthsWithData(tasks) {
 }
 
 /* ============================================================
-   The monthly board. Like the sheet, each month has its own
-   board: the work completed that month plus everything still
-   open, which carries over from month to month. Completed work
-   from earlier months leaves the board and lives in the archive
-   (see closeMonth and src/lib/api.js), which Insights reads.
+   The monthly board. Each month has its own board: the work
+   completed that month plus everything still open. When a month
+   ends, its totals are saved (closeMonth → archiveMonth in
+   src/lib/api.js) for Insights, its completed tasks are deleted
+   (endedTasks → deleteTasks), and open tasks carry over.
    ============================================================ */
 
 /** Is a task on month ym's board? */
@@ -237,14 +237,19 @@ export function onBoard(t, ym) {
 }
 export const boardTasks = (tasks, ym) => tasks.filter((t) => onBoard(t, ym))
 
-/** The snapshot sent to the archive when month ym closes. */
+/** The totals saved when month ym closes: no task rows, only what Insights compares. */
 export function closeMonth(tasks, ym) {
   const board = boardTasks(tasks, ym).filter((t) => !isDone(t) || !t.completed || t.completed.slice(0, 7) === ym)
+  const { open, closed, inProgress, notStarted, blocked, planned, completed } = summary(board, ym)
   return {
     month: ym,
     closedAt: new Date().toISOString(),
-    tasks: board.map(({ fresh, moved, ...t }) => t), // eslint-disable-line no-unused-vars
-    summary: summary(board, ym),
+    /* the board as it stood at the end of the month */
+    summary: { tasks: board.length, open, closed, inProgress, notStarted, blocked, pointsPlanned: planned, pointsDone: completed },
+    /* everything Insights shows for a month: totals plus by person and by pillar */
     stats: monthStats(board, ym),
   }
 }
+
+/** Tasks that leave the board when month ym starts: completed before it (open work carries over). */
+export const endedTasks = (tasks, ym) => tasks.filter((t) => !onBoard(t, ym))

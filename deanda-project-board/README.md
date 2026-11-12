@@ -32,7 +32,7 @@ Each task has **Story points** (effort: 1, 2, 3, 5, 8, 13) and **Hours** (time i
 
 Everything date-based is worked out from today's date each time the page draws, so sections, week ranges and the reporting month move on by themselves, including at midnight with the page left open. Dates outside the current year show their year ("Nov 3, 2025").
 
-**Monthly boards.** Every page except Insights shows only the current month's board: work completed this month plus everything still open (open work carries over, as on the monthly sheets). The sidebar shows the month, the day and when it resets. On the 1st, the month that ended is archived (its tasks, summary and totals) and Insights reads closed months from the archive. A month that ends while nobody has the app open is closed on the next visit.
+**Monthly boards.** Every page except Insights shows only the current month's board: work completed this month plus everything still open. The sidebar shows the month, the day and when it resets. On the 1st, the month that ended is closed: its totals (hours, tasks completed, story points, due and on-time, people, and the same by person and by pillar) are saved through `archiveMonth` for Insights, its completed tasks are deleted (`deleteTasks`), and open tasks carry over. No task rows are kept in the archive. A month that ends while nobody has the app open is closed on the next visit. The archive record's shape is documented in `src/lib/api.js`.
 
 Click any task anywhere to edit every column of its row. `N` adds a task, `⌘K` searches tasks, people and pillars.
 

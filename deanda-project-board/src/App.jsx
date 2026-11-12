@@ -4,7 +4,7 @@ import { USER, applyDirectory } from './data/board'
 import { codeFor, loadDirectory, same, saveDirectory } from './lib/directory'
 import * as api from './lib/api'
 import { fmtMonth, todayISO } from './lib/format'
-import { boardTasks, closeMonth, shiftMonth } from './lib/selectors'
+import { boardTasks, closeMonth, endedTasks, onBoard, shiftMonth } from './lib/selectors'
 import { DEFAULTS } from './lib/settings'
 import Environment from './components/Environment'
 import Sidebar from './components/Sidebar'
@@ -71,8 +71,9 @@ const BOOT = (() => {
     archive[snap.month] = snap
     api.archiveMonth(snap)
   })
+  if (snaps.length) api.deleteTasks(endedTasks(api.initialTasks(), now).map((t) => t.id))
   api.markOpenMonth(now)
-  return { archive, closed: snaps.map((x) => x.month) }
+  return { archive, closed: snaps.map((x) => x.month), month: now }
 })()
 
 const pageFromHash = () => {
@@ -92,7 +93,8 @@ export default function App() {
   const stage = useRef(null)
 
   /* ---------------- board state ---------------- */
-  const [tasks, setTasks] = useState(api.initialTasks)
+  /* completed tasks from months that have ended were cleared when those months closed */
+  const [tasks, setTasks] = useState(() => api.initialTasks().filter((t) => onBoard(t, BOOT.month)))
   const [archive, setArchive] = useState(BOOT.archive)
 
   const toast = useCallback((t) => {
@@ -129,6 +131,13 @@ export default function App() {
         announceClosed(snap.month)
       })
       if (snaps.length) setArchive((a) => ({ ...a, ...Object.fromEntries(snaps.map((x) => [x.month, x])) }))
+      /* the new month starts clean: last month's completed tasks are deleted, open ones carry over */
+      const ended = endedTasks(latest.current.tasks, t.slice(0, 7))
+      if (ended.length) {
+        const gone = new Set(ended.map((x) => x.id))
+        setTasks((all) => all.filter((x) => !gone.has(x.id)))
+        api.deleteTasks([...gone])
+      }
       api.markOpenMonth(t.slice(0, 7))
     }
     const id = setInterval(check, 60000)
