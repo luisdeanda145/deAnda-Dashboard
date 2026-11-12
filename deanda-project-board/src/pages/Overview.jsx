@@ -3,7 +3,7 @@ import Icon from '../components/Icon'
 import { Donut, StackBar, TickBar } from '../components/Charts'
 import { Avatar, CardHead, Select, Words } from '../components/ui'
 import { STATUSES, USER } from '../data/board'
-import { fmtMonth, greeting, num, pts } from '../lib/format'
+import { fmtDow, fmtMonth, greeting, hrs, num, todayISO } from '../lib/format'
 import { useCountUp } from '../lib/hooks'
 import { byPillar, isOpen, summary } from '../lib/selectors'
 import { useApp } from '../lib/store'
@@ -64,27 +64,50 @@ function Header() {
   )
 }
 
-function PointsCard({ s, ipSP }) {
-  const pct = useCountUp(s.donePct, 1300, 350)
-  const ip = s.planned ? (ipSP / s.planned) * 100 : 0
-  const none = s.planned === 0
+/** Today: everything due today or finished today, and how far along it is. */
+function TodayCard({ tasks }) {
+  const { go } = useApp()
+  const today = todayISO()
+  const list = tasks.filter((t) => t.due === today || (t.status === 'Done' && t.completed === today))
+  const done = list.filter((t) => t.status === 'Done')
+  const inProgress = list.filter((t) => t.status === 'In progress').length
+  const notStarted = list.filter((t) => t.status === 'Not started').length
+  const blocked = list.filter((t) => t.status === 'Blocked').length
+  const open = list.length - done.length
+  const hours = done.reduce((a, t) => a + (t.hours || 0), 0)
+  const n = useCountUp(done.length, 1000, 350)
+  const total = list.length || 1
+  const a = (done.length / total) * 100
+  const b = a + (inProgress / total) * 100
+  const c = b + (notStarted / total) * 100
   return (
     <article className="card kpi-card hl rise" style={{ '--d': 5 }}>
-      <CardHead title="Story Points Done" />
+      <CardHead title="Today">
+        <span className="faint-note">{fmtDow(today)}</span>
+      </CardHead>
       <div className="kpi">
-        <strong className="figure">{none ? '—' : `${pct.toFixed(1)}%`}</strong>
-        <span className="kpi-note">{none ? 'No story points on tasks yet' : `${pts(s.completed)} of ${pts(s.planned)}`}</span>
+        <strong className="figure">
+          {Math.round(n)}
+          <small className="kpi-of">/{list.length} done</small>
+        </strong>
+        {open > 0 && (
+          <button type="button" className="tag-red" onClick={() => go('board')}>
+            {open} still open
+          </button>
+        )}
+        <span className="kpi-note">{list.length ? `${hrs(hours)}h logged` : 'Nothing due or done today'}</span>
       </div>
       <TickBar
         delay={0.35}
         segments={
-          none
-            ? [{ to: 100, tone: 'mute', label: 'Give tasks story points to track this' }]
-            : [
-                { to: s.donePct, tone: 'teal', label: `Done · ${pts(s.completed)}` },
-                { to: s.donePct + ip, tone: 'blue', label: `In progress · ${pts(ipSP)}` },
-                { to: 100, tone: 'mute', label: `Not started or blocked · ${pts(s.planned - s.completed - ipSP)}` },
+          list.length
+            ? [
+                { to: a, tone: 'teal', label: `Done · ${done.length}` },
+                { to: b, tone: 'blue', label: `In progress · ${inProgress}` },
+                { to: c, tone: 'sky', label: `Not started · ${notStarted}` },
+                { to: 100, tone: 'red', label: `Blocked · ${blocked}` },
               ]
+            : [{ to: 100, tone: 'mute', label: 'Nothing due or done today' }]
         }
       />
     </article>
@@ -195,7 +218,6 @@ function PillarCard({ tasks }) {
 export default function Overview() {
   const { tasks, month } = useApp()
   const s = summary(tasks, month)
-  const ipSP = tasks.filter((t) => t.status === 'In progress').reduce((a, t) => a + (t.points || 0), 0)
   return (
     <div className="overview">
       <Header />
@@ -204,7 +226,7 @@ export default function Overview() {
         <StatusCard tasks={tasks} />
         <PillarCard tasks={tasks} />
         <WhereHoursWent tasks={tasks} month={month} delay={4} />
-        <PointsCard s={s} ipSP={ipSP} />
+        <TodayCard tasks={tasks} />
         <OpenCard s={s} />
       </div>
     </div>

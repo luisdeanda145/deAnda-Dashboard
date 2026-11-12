@@ -153,6 +153,13 @@
   gap: 10px;
   margin: 8px 0 13px;
 }
+.kpi-of {
+  margin-left: 4px;
+  font-family: var(--sans, inherit);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--muted);
+}
 .kpi-note {
   margin-left: auto;
   font-size: 14px;
