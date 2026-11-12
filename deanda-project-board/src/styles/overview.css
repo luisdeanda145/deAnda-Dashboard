@@ -153,13 +153,6 @@
   gap: 10px;
   margin: 8px 0 13px;
 }
-.kpi-of {
-  margin-left: 4px;
-  font-family: var(--sans, inherit);
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--muted);
-}
 .kpi-note {
   margin-left: auto;
   font-size: 14px;
@@ -1229,4 +1222,22 @@ kbd {
 .ov-grid .faint-note {
   font-size: 12.5px;
   color: var(--muted);
+}
+
+/* the small, today-only "Where The Hours Went" beside Open Items */
+.hours-today .ws-bars {
+  gap: 8px;
+  margin-top: 12px;
+}
+.hours-today .ws-bars li {
+  grid-template-columns: minmax(0, 150px) minmax(0, 1fr) 40px 44px;
+  gap: 10px;
+  font-size: 12.5px;
+}
+.hours-today .ws-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hours-today-empty {
+  margin-top: 14px;
 }

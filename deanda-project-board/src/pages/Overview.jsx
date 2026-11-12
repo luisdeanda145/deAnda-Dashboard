@@ -3,11 +3,11 @@ import Icon from '../components/Icon'
 import { Donut, StackBar, TickBar } from '../components/Charts'
 import { Avatar, CardHead, Select, Words } from '../components/ui'
 import { STATUSES, USER } from '../data/board'
-import { fmtDow, fmtMonth, greeting, hrs, num, todayISO } from '../lib/format'
+import { fmtMonth, greeting, num } from '../lib/format'
 import { useCountUp } from '../lib/hooks'
 import { byPillar, isOpen, summary } from '../lib/selectors'
 import { useApp } from '../lib/store'
-import { DailyHoursTracker, WhereHoursWent } from '../components/HoursCards'
+import { DailyHoursTracker, WhereHoursWent, WhereHoursWentToday } from '../components/HoursCards'
 
 function Header() {
   const { openSheet, toast, month, go } = useApp()
@@ -61,57 +61,6 @@ function Header() {
         </button>
       </div>
     </header>
-  )
-}
-
-/** Today: everything due today or finished today, and how far along it is. */
-function TodayCard({ tasks }) {
-  const { go } = useApp()
-  const today = todayISO()
-  const list = tasks.filter((t) => t.due === today || (t.status === 'Done' && t.completed === today))
-  const done = list.filter((t) => t.status === 'Done')
-  const inProgress = list.filter((t) => t.status === 'In progress').length
-  const notStarted = list.filter((t) => t.status === 'Not started').length
-  const blocked = list.filter((t) => t.status === 'Blocked').length
-  const open = list.length - done.length
-  /* hours count on the day the task was finished (as in Hours By Day), not the day it was due */
-  const hours = done.filter((t) => t.completed === today).reduce((a, t) => a + (t.hours || 0), 0)
-  const n = useCountUp(done.length, 1000, 350)
-  const total = list.length || 1
-  const a = (done.length / total) * 100
-  const b = a + (inProgress / total) * 100
-  const c = b + (notStarted / total) * 100
-  return (
-    <article className="card kpi-card hl rise" style={{ '--d': 5 }}>
-      <CardHead title="Today">
-        <span className="faint-note">{fmtDow(today)}</span>
-      </CardHead>
-      <div className="kpi">
-        <strong className="figure">
-          {Math.round(n)}
-          <small className="kpi-of">/{list.length} done</small>
-        </strong>
-        {open > 0 && (
-          <button type="button" className="tag-red" onClick={() => go('board')}>
-            {open} still open
-          </button>
-        )}
-        <span className="kpi-note">{list.length ? `${hrs(hours)}h logged` : 'Nothing due or done today'}</span>
-      </div>
-      <TickBar
-        delay={0.35}
-        segments={
-          list.length
-            ? [
-                { to: a, tone: 'teal', label: `Done · ${done.length}` },
-                { to: b, tone: 'blue', label: `In progress · ${inProgress}` },
-                { to: c, tone: 'sky', label: `Not started · ${notStarted}` },
-                { to: 100, tone: 'red', label: `Blocked · ${blocked}` },
-              ]
-            : [{ to: 100, tone: 'mute', label: 'Nothing due or done today' }]
-        }
-      />
-    </article>
   )
 }
 
@@ -227,7 +176,7 @@ export default function Overview() {
         <StatusCard tasks={tasks} />
         <PillarCard tasks={tasks} />
         <WhereHoursWent tasks={tasks} month={month} delay={4} />
-        <TodayCard tasks={tasks} />
+        <WhereHoursWentToday tasks={tasks} delay={5} />
         <OpenCard s={s} />
       </div>
     </div>

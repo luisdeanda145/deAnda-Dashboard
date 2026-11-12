@@ -105,3 +105,51 @@ export function WhereHoursWent({ tasks, month, delay = 6 }) {
     </article>
   )
 }
+
+const TODAY_ROWS = 3
+
+/** Overview → a small "Where The Hours Went" for today: hours on tasks finished today, by pillar. */
+export function WhereHoursWentToday({ tasks, delay = 5 }) {
+  const today = todayISO()
+  const done = tasks.filter((t) => t.status === 'Done' && t.completed === today && t.hours > 0)
+  const total = done.reduce((a, t) => a + t.hours, 0)
+  const all = [...PILLARS.map((p) => p.name), 'Other']
+    .map((name) => ({
+      name,
+      v: done.filter((t) => (name === 'Other' ? !PILLARS.some((p) => p.name === t.pillar) : t.pillar === name)).reduce((a, t) => a + t.hours, 0),
+    }))
+    .filter((x) => x.v > 0)
+    .sort((a, b) => b.v - a.v)
+  /* keep it small: the top pillars, then the rest together */
+  const rest = all.slice(TODAY_ROWS)
+  const rows = rest.length > 1 ? [...all.slice(0, TODAY_ROWS), { name: `${rest.length} more`, v: rest.reduce((a, x) => a + x.v, 0), more: true }] : all
+  const max = Math.max(1, ...rows.map((x) => x.v))
+
+  return (
+    <article className="card kpi-card hours-today rise" style={{ '--d': delay }}>
+      <CardHead title="Where The Hours Went">
+        <span className="faint-note">
+          Today · {hrs(total)}h
+        </span>
+      </CardHead>
+      {rows.length ? (
+        <ul className="ws-bars">
+          {rows.map((x, i) => (
+            <li key={x.name} style={{ '--i': i }}>
+              <span className="ws-name">
+                <i className={`dot ${x.more ? 'mute' : pillarTone(x.name)}`} /> {x.name}
+              </span>
+              <span className="ws-track">
+                <i className="ws-done" style={{ width: `${(x.v / max) * 100}%` }} />
+              </span>
+              <span className="ws-n">{Math.round((x.v / (total || 1)) * 100)}%</span>
+              <span className="ws-h">{hrs(x.v)}h</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="muted-line hours-today-empty">No hours logged on finished tasks yet today.</p>
+      )}
+    </article>
+  )
+}
