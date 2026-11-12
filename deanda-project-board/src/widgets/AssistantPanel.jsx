@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ThinkingOrb } from 'thinking-orbs'
+import Orb from '../components/Orb'
 import Icon from '../components/Icon'
 
 /**
@@ -17,7 +17,7 @@ export default function AssistantPanel({ onClose }) {
   return (
     <section className="win widget assistant-panel" role="dialog" aria-label="AI assistant" onKeyDown={(e) => e.key === 'Escape' && onClose()}>
       <header className="as-head">
-        <ThinkingOrb state="composing" size={20} theme="dark" aria-hidden="true" />
+        <Orb state="composing" size={20} fps={30} />
         <h3>Assistant</h3>
         <span className="as-badge">
           <Icon name="alert" size={12} stroke={2.2} /> Under construction
