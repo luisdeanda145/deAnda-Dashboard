@@ -2284,12 +2284,9 @@
 /* ---------------- a hidden extra (SecretBadge) ---------------- */
 .secret-spot {
   position: fixed;
-  top: 0;
-  left: 0;
   z-index: 200;
-  width: 14px;
-  height: 14px;
   padding: 0;
+  border-radius: 50%;
   border: 0;
   background: transparent;
   cursor: default;

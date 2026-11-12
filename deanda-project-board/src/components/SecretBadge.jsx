@@ -14,30 +14,33 @@ function room() {
 }
 
 /**
- * A hidden extra: a tiny invisible spot in the very top-left corner of the screen.
- * Click it and the badge appears in that corner, sized so it never covers the
- * dashboard (where there's no room, e.g. on a phone, it stays hidden). Click again to hide it.
+ * A hidden extra: an invisible spot in the top-left corner of the screen, exactly
+ * where the badge appears and the same size. Click it and the badge shows there,
+ * sized so it never covers the dashboard; click it again to hide it. Where there's
+ * no room (e.g. on a phone) there's no spot and no badge.
  */
 export default function SecretBadge() {
   const [shown, setShown] = useState(false)
   const [size, setSize] = useState(0)
 
   useEffect(() => {
-    if (!shown) return
     const fit = () => setSize(room())
-    fit()
-    const id = setTimeout(fit, 900) // again once the windows have finished settling in
+    const first = requestAnimationFrame(fit)
+    const settled = setTimeout(fit, 2200) // again once the windows have finished settling in
     addEventListener('resize', fit)
     return () => {
-      clearTimeout(id)
+      cancelAnimationFrame(first)
+      clearTimeout(settled)
       removeEventListener('resize', fit)
     }
-  }, [shown])
+  }, [])
 
+  if (size < 28) return null
+  const box = { width: size, height: size, left: PAD, top: PAD }
   return createPortal(
     <>
-      <button type="button" className="secret-spot" aria-hidden="true" tabIndex={-1} onClick={() => setShown((s) => !s)} />
-      {shown && size >= 28 && <img className="secret-badge" src="/badge.svg" alt="" style={{ width: size, height: size, left: PAD, top: PAD }} />}
+      {shown && <img className="secret-badge" src="/badge.svg" alt="" style={box} />}
+      <button type="button" className="secret-spot" aria-hidden="true" tabIndex={-1} style={box} onClick={() => setShown((s) => !s)} />
     </>,
     document.body,
   )
