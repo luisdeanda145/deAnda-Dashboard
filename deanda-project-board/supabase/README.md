@@ -51,6 +51,14 @@ fill in the same two values.
 Never put the **service_role / secret** key in the app or in Vercel: it bypasses
 the access rules.
 
+## Syncing from the spreadsheet
+
+`sync-2026-11-sheet.sql` brings in the latest `Project_Board_Nov_2026.xlsx`:
+59 edited tasks and 156 new ones. Run it once in the SQL Editor; the result row
+shows how many were edited, added and skipped. A task someone already changed in
+the app is skipped rather than overwritten, nothing is deleted, and running it
+twice changes nothing. (`seed.sql` already includes these for a fresh setup.)
+
 ## How the month reset works
 
 `close_ended_months()` runs at :07 every hour. On the first run after a month
