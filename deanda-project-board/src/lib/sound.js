@@ -1,5 +1,6 @@
 /* ============================================================
-   UI sounds (made with ElevenLabs, trimmed to ~1 s):
+   UI sounds (made with ElevenLabs, trimmed to ~1 s, with a 5 ms
+   fade-in so they don't pop):
      tab   — a sidebar or phone tab is selected
      added — a task is added
    Played through Web Audio: each file is fetched and decoded
@@ -54,10 +55,13 @@ export async function play(name) {
     if (!buf) return
     const src = ac.createBufferSource()
     const gain = ac.createGain()
-    gain.gain.value = prefs.volume
+    /* rise from silence over 5 ms: an instant jump from 0 is heard as a pop */
+    const t = ac.currentTime
+    gain.gain.setValueAtTime(0, t)
+    gain.gain.linearRampToValueAtTime(prefs.volume, t + 0.005)
     src.buffer = buf
     src.connect(gain).connect(ac.destination)
-    src.start()
+    src.start(t)
   } catch {
     /* a sound is never worth an error */
   }
