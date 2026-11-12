@@ -15,6 +15,7 @@ import Palette from './components/Palette'
 import TaskSheet from './components/TaskSheet'
 import Toasts from './components/Toasts'
 import PhoneTabs from './components/PhoneTabs'
+import SecretBadge from './components/SecretBadge'
 import SignIn from './components/SignIn'
 import { TEAM_DOMAIN } from './lib/supabase'
 import HoursWidget from './widgets/HoursWidget'
@@ -539,6 +540,7 @@ export default function App() {
         {sheet?.manage && <ManageSheet what={sheet.manage} pillar={sheet.pillar} onClose={() => setSheet(null)} />}
         {sheet?.task && <TaskSheet key={sheet.task.id || 'new'} task={sheet.task} hint={sheet.hint} onClose={() => setSheet(null)} />}
         <PhoneTabs />
+        <SecretBadge />
         <Toasts items={toasts} />
       </main>
     </AppContext.Provider>
