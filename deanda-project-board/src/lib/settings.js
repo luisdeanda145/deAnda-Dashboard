@@ -5,5 +5,7 @@ export const DEFAULTS = {
   frost: 44,
   tint: 58,
   bgBlur: 2, // px of blur on the room photo behind the windows
+  sound: true, // tab and task-added sounds
+  volume: 50, // %
   motion: true,
 }

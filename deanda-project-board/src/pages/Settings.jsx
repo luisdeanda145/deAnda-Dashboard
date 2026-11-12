@@ -5,6 +5,7 @@ import { PILLARS, TEAM, USER, WORKSTREAMS } from '../data/board'
 import { fmtDay, fmtMonth } from '../lib/format'
 import { focusOf, shiftMonth } from '../lib/selectors'
 import { useApp } from '../lib/store'
+import { play } from '../lib/sound'
 import { connected, signOut } from '../lib/api'
 
 function Slider({ label, hint, value, min, max, step = 1, unit = '', onChange }) {
@@ -106,6 +107,16 @@ export default function Settings() {
           <Slider label="Frost" hint="How frosted the glass of every window is." value={settings.frost} min={6} max={70} unit="px" onChange={(frost) => set({ frost })} />
           <Slider label="Tint" hint="Darker glass keeps text legible on bright scenes." value={settings.tint} min={0} max={70} unit="%" onChange={(tint) => set({ tint })} />
           <Slider label="Background blur" hint="Softens the room photo behind the windows. 0 is sharp." value={settings.bgBlur} min={0} max={16} unit="px" onChange={(bgBlur) => set({ bgBlur })} />
+          <div className="set-row">
+            <div>
+              <b>Sounds</b>
+              <small>A soft tick when you switch tabs and a chime when a task is added</small>
+            </div>
+            <Switch on={settings.sound} onChange={(sound) => { set({ sound }); if (sound) setTimeout(() => play('tab'), 0) }} label="Sounds" />
+          </div>
+          {settings.sound && (
+            <Slider label="Sound volume" value={settings.volume} min={5} max={100} step={5} unit="%" onChange={(volume) => set({ volume })} />
+          )}
           <div className="set-row">
             <div>
               <b>Animations</b>

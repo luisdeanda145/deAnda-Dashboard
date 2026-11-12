@@ -6,6 +6,7 @@ import { PAGES } from '../data/pages'
 import { daysInMonth, fmtMonth, shortMonth } from '../lib/format'
 import { isOpen, shiftMonth } from '../lib/selectors'
 import { useApp } from '../lib/store'
+import { play } from '../lib/sound'
 
 /** The bent-back left panel of the main window: workspace and navigation. */
 export default function Sidebar() {
@@ -39,7 +40,10 @@ export default function Sidebar() {
       className={`nav-item${p.id === page ? ' on' : ''}`}
       style={{ '--i': i }}
       aria-current={p.id === page ? 'page' : undefined}
-      onClick={() => go(p.id)}
+      onClick={() => {
+        if (p.id !== page) play('tab')
+        go(p.id)
+      }}
     >
       <Icon name={p.icon} size={21} />
       <span>{p.label}</span>

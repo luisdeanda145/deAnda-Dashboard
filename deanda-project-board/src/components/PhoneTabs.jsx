@@ -5,6 +5,7 @@ import { PAGES } from '../data/pages'
 import { useDismiss } from '../lib/hooks'
 import { isOpen } from '../lib/selectors'
 import { useApp } from '../lib/store'
+import { play } from '../lib/sound'
 
 /* the four pages that get their own tab; everything else lives under More */
 const MAIN = ['overview', 'mine', 'board', 'tasks']
@@ -29,6 +30,7 @@ export default function PhoneTabs() {
   const inMore = rest.some((p) => p.id === page)
   const open = (id) => {
     setMore(false)
+    if (id !== page) play('tab')
     go(id)
   }
 

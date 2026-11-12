@@ -6,6 +6,7 @@ import * as api from './lib/api'
 import { fmtMonth, todayISO } from './lib/format'
 import { boardTasks, closeMonth, endedTasks, onBoard, shiftMonth } from './lib/selectors'
 import { DEFAULTS } from './lib/settings'
+import { play, setSoundPrefs } from './lib/sound'
 import Environment from './components/Environment'
 import Sidebar from './components/Sidebar'
 import { PAGES } from './data/pages'
@@ -327,6 +328,7 @@ export default function App() {
     async (task) => {
       const tmp = { ...task, id: `tmp-${Date.now()}`, fresh: true }
       setTasks((all) => [tmp, ...all])
+      play('added')
       try {
         const saved = await api.createTask({ ...task })
         setTasks((all) => (all.some((t) => t.id === saved.id) ? all.filter((t) => t.id !== tmp.id) : all.map((t) => (t.id === tmp.id ? { ...saved, fresh: true } : t))))
@@ -382,6 +384,7 @@ export default function App() {
     root.style.setProperty('--frost', `${settings.frost}px`)
     root.style.setProperty('--tint', settings.tint / 100)
     root.style.setProperty('--bg-blur', `${settings.bgBlur}px`)
+    setSoundPrefs(settings.sound, settings.volume / 100)
   }, [settings])
 
   const toTop = () => {
