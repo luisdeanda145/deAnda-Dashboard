@@ -16,7 +16,7 @@ const SHORT = { tasks: 'Tasks' }
  * than a phone (see styles/phone.css), so the desktop layout never sees it.
  */
 export default function PhoneTabs() {
-  const { page, go, tasks } = useApp()
+  const { page, go, tasks, unread } = useApp()
   const [more, setMore] = useState(false)
   const ref = useRef(null)
   useDismiss(ref, more, () => setMore(false))
@@ -50,7 +50,11 @@ export default function PhoneTabs() {
         <button type="button" key={p.id} className={`pt-item${p.id === page ? ' on' : ''}`} aria-current={p.id === page ? 'page' : undefined} onClick={() => open(p.id)}>
           <span className="pt-ic">
             <Icon name={p.icon} size={22} />
-            {badges[p.id] > 0 && <b className={p.id === 'board' ? 'warn' : ''}>{badges[p.id]}</b>}
+            {p.id === 'mine' && unread > 0 ? (
+              <b className="msg">{unread}</b>
+            ) : (
+              badges[p.id] > 0 && <b className={p.id === 'board' ? 'warn' : ''}>{badges[p.id]}</b>
+            )}
           </span>
           {SHORT[p.id] || p.label}
         </button>

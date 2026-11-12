@@ -103,6 +103,9 @@ export default function App() {
   const [tasks, setTasks] = useState(() => api.initialTasks().filter((t) => onBoard(t, BOOT.month)))
   const [archive, setArchive] = useState(BOOT.archive)
   const [me, setMe] = useState(USER.name) // whose tab My Work shows
+  const [messages, setMessages] = useState([])
+  /* who is sending and receiving messages: the signed-in teammate (null until known) */
+  const [myName, setMyName] = useState(api.connected ? null : USER.name)
   /* team, pillars, workstreams */
   const [dir, setDir] = useState(loadDirectory)
   applyDirectory(dir) // before any child renders, so they all read the edited lists
@@ -127,10 +130,11 @@ export default function App() {
     async (who) => {
       if (!api.connected) return
       try {
-        const [t, d, a] = await Promise.all([api.fetchTasks(), api.fetchDirectory(), api.fetchArchive()])
+        const [t, d, a, m] = await Promise.all([api.fetchTasks(), api.fetchDirectory(), api.fetchArchive(), api.fetchMessages()])
         setTasks(t)
         if (d) setDir(d)
         setArchive(a)
+        setMessages(m)
         if (who && d && !named.current) {
           named.current = true
           const meta = who.user_metadata || {}
@@ -141,6 +145,7 @@ export default function App() {
             USER.email = who.email
             setMe(match.name)
           }
+          setMyName(match ? match.name : null)
         }
       } catch (e) {
         toast({ icon: 'alert', title: 'Couldn’t load the board', text: e?.message || 'Check your connection' })
@@ -168,6 +173,65 @@ export default function App() {
       stop()
     }
   }, [reload])
+
+  /* ---------------- messages ---------------- */
+  /* local mode: this browser's own messages */
+  useEffect(() => {
+    if (!api.connected) api.fetchMessages().then(setMessages)
+  }, [])
+  /* new messages arrive live; a message for you while you're elsewhere gets a notice */
+  const seenMsgs = useRef(new Set())
+  useEffect(() => {
+    messages.forEach((m) => seenMsgs.current.add(m.id))
+  }, [messages])
+  useEffect(() => {
+    if (!userId) return
+    let t
+    const stop = api.watchMessages(() => {
+      clearTimeout(t)
+      t = setTimeout(async () => {
+        try {
+          const m = await api.fetchMessages()
+          const fresh = m.filter((x) => !seenMsgs.current.has(x.id) && x.to_name === USER.name && !x.read_at)
+          setMessages(m)
+          fresh.forEach((x) => toast({ icon: 'chat', title: `New message from ${x.from_name}`, text: x.body.length > 70 ? x.body.slice(0, 70) + '…' : x.body }))
+        } catch {
+          /* the next change will try again */
+        }
+      }, 300)
+    })
+    return () => {
+      clearTimeout(t)
+      stop()
+    }
+  }, [userId, toast])
+
+  const sendMessage = useCallback(
+    async (to, body) => {
+      const text = body.trim()
+      if (!text || !myName) return false
+      const tmp = { id: `tmp-${Date.now()}`, to_name: to, from_name: myName, body: text, created_at: new Date().toISOString(), read_at: null }
+      seenMsgs.current.add(tmp.id)
+      setMessages((all) => [tmp, ...all])
+      try {
+        const saved = await api.sendMessage({ to, from: myName, body: text })
+        seenMsgs.current.add(saved.id)
+        setMessages((all) => [saved, ...all.filter((x) => x.id !== tmp.id && x.id !== saved.id)])
+        return true
+      } catch (e) {
+        setMessages((all) => all.filter((x) => x.id !== tmp.id))
+        toast({ icon: 'alert', title: 'Message not sent', text: e?.message || 'Check your connection' })
+        return false
+      }
+    },
+    [myName, toast],
+  )
+  const markRead = useCallback((ids) => {
+    if (!ids.length) return
+    const at = new Date().toISOString()
+    setMessages((all) => all.map((m) => (ids.includes(m.id) ? { ...m, read_at: at } : m)))
+    api.markMessagesRead(ids).catch(() => {})
+  }, [])
 
   /* anyone's edit shows up for everyone: refetch shortly after a change */
   useEffect(() => {
@@ -252,6 +316,9 @@ export default function App() {
   /* the board is always this calendar month's; past months are in Insights */
   const month = today.slice(0, 7)
   const board = useMemo(() => boardTasks(tasks, month), [tasks, month])
+  /* messages belong to the month they were sent in */
+  const monthMsgs = useMemo(() => messages.filter((m) => { const d = new Date(m.created_at); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === month }), [messages, month])
+  const unread = myName ? monthMsgs.filter((m) => m.to_name === myName && !m.read_at).length : 0
 
   const [preset, setPreset] = useState(null) // a filter handed to All Tasks
 
@@ -488,6 +555,11 @@ export default function App() {
       me,
       session,
       reload,
+      messages: monthMsgs,
+      myName,
+      unread,
+      sendMessage,
+      markRead,
       setMe,
       preset,
       setPreset,
@@ -500,7 +572,7 @@ export default function App() {
       removeWorkstream,
       manage: (what, extra) => setSheet({ manage: what, ...extra }),
     }),
-    [page, go, settings, set, toast, spatial, side, right, tasks, addTask, patchTask, removeTask, toggleDone, openTask, month, today, board, archive, me, session, reload, preset, dir, addPerson, removePerson, addPillar, removePillar, addWorkstream, removeWorkstream],
+    [page, go, settings, set, toast, spatial, side, right, tasks, addTask, patchTask, removeTask, toggleDone, openTask, month, today, board, archive, me, session, reload, monthMsgs, myName, unread, sendMessage, markRead, preset, dir, addPerson, removePerson, addPillar, removePillar, addWorkstream, removeWorkstream],
   )
 
   const View = VIEWS[page]

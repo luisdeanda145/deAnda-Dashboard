@@ -5,6 +5,7 @@ import { TEAM, USER } from '../data/board'
 import { fmtMonth, todayISO } from '../lib/format'
 import { isDone, personal } from '../lib/selectors'
 import DateGroups from '../components/DateGroups'
+import Messages from '../components/Messages'
 import { useApp } from '../lib/store'
 
 const FILTERS = ['All', 'Open', 'Completed']
@@ -54,6 +55,8 @@ export default function MyWork() {
         <Stat d={3} icon="target" label="Story points still open" value={p.ptsOpen} />
         <Stat d={4} icon="bolt" label="Hours this month" value={p.realMonth} />
       </div>
+
+      <Messages key={me} />
 
       <form className="add-task rise" style={{ '--d': 5 }} onSubmit={add}>
         <Icon name="plus" size={18} stroke={2} />

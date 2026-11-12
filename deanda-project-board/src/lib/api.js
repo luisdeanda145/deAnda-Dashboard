@@ -195,6 +195,69 @@ export const markOpenMonth = (ym) => {
   }
 }
 
+/* ---------------- messages ----------------
+   Short notes between teammates (My Work). Each person keeps their
+   latest 10, and messages are cleared when the month changes: with
+   the database by supabase/messages.sql, in local mode here.
+   A message: { id, to_name, from_name, body, created_at, read_at } */
+const MSG_KEY = 'dac-board-messages'
+const MSG_COLS = 'id, to_name, from_name, body, created_at, read_at'
+const sameMonth = (iso, now = new Date()) => {
+  const d = new Date(iso)
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+}
+const readLocalMsgs = () => {
+  try {
+    return JSON.parse(localStorage.getItem(MSG_KEY) || '[]').filter((m) => sameMonth(m.created_at))
+  } catch {
+    return []
+  }
+}
+const writeLocalMsgs = (all) => {
+  try {
+    localStorage.setItem(MSG_KEY, JSON.stringify(all))
+  } catch {
+    /* ignore */
+  }
+}
+/** keep each person's latest 10 */
+const keepTen = (all) => {
+  const n = {}
+  return [...all].sort((a, b) => b.created_at.localeCompare(a.created_at)).filter((m) => (n[m.to_name] = (n[m.to_name] || 0) + 1) <= 10)
+}
+
+/** This month's messages, newest first. */
+export async function fetchMessages() {
+  if (!connected) return latency(keepTen(readLocalMsgs()))
+  const rows = must(await supabase.from('messages').select(MSG_COLS).order('created_at', { ascending: false }).limit(500))
+  return rows.filter((m) => sameMonth(m.created_at))
+}
+
+export async function sendMessage({ to, from, body }) {
+  if (!connected) {
+    const m = { id: `m${Date.now().toString(36)}`, to_name: to, from_name: from, body, created_at: new Date().toISOString(), read_at: null }
+    writeLocalMsgs(keepTen([m, ...readLocalMsgs()]))
+    return latency(m)
+  }
+  return must(await supabase.from('messages').insert({ to_name: to, from_name: from, body }).select(MSG_COLS).single())
+}
+
+export async function markMessagesRead(ids) {
+  if (!ids.length) return
+  const at = new Date().toISOString()
+  if (!connected) return writeLocalMsgs(readLocalMsgs().map((m) => (ids.includes(m.id) ? { ...m, read_at: at } : m)))
+  must(await supabase.from('messages').update({ read_at: at }).in('id', ids))
+}
+
+export function watchMessages(onChange) {
+  if (!connected) return () => {}
+  const channel = supabase
+    .channel('messages')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, onChange)
+    .subscribe()
+  return () => supabase.removeChannel(channel)
+}
+
 /* ---------------- sign-in ---------------- */
 
 export const getSession = async () => (connected ? (await supabase.auth.getSession()).data.session : null)

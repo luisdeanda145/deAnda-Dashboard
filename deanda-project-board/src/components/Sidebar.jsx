@@ -10,7 +10,7 @@ import { play } from '../lib/sound'
 
 /** The bent-back left panel of the main window: workspace and navigation. */
 export default function Sidebar() {
-  const { page, go, tasks, openTask, month, today } = useApp()
+  const { page, go, tasks, openTask, month, today, unread } = useApp()
   const dayN = Number(today.slice(8, 10))
   const days = daysInMonth(month)
   const nav = useRef(null)
@@ -47,7 +47,13 @@ export default function Sidebar() {
     >
       <Icon name={p.icon} size={21} />
       <span>{p.label}</span>
-      {badges[p.id] > 0 && (
+      {p.id === 'mine' && unread > 0 && (
+        <b className="badge msg-badge" title={`${unread} unread message${unread === 1 ? '' : 's'}`}>
+          <Icon name="chat" size={11} stroke={2.4} />
+          {unread}
+        </b>
+      )}
+      {badges[p.id] > 0 && !(p.id === 'mine' && unread > 0) && (
         <b className={`badge${p.id === 'board' ? ' warn' : ''}`} title={p.id === 'board' ? 'Blocked tasks' : 'Your open tasks'}>
           {badges[p.id]}
         </b>
