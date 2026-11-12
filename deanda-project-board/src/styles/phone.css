@@ -191,6 +191,13 @@
   .filters {
     flex-wrap: wrap;
   }
+  /* a segmented switch fills the row so its equal parts fit */
+  .filters .seg {
+    width: 100%;
+  }
+  .filters .seg button {
+    padding: 0 6px;
+  }
 
   /* ---------------- task rows: two lines so titles can be read ---------------- */
   .task {

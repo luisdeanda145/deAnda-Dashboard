@@ -2631,3 +2631,8 @@
 [data-motion='off'] .pt-ic b.msg {
   animation: none !important;
 }
+
+/* the task count beside the board's filters stays on one line */
+.filter-bar > .muted-line {
+  white-space: nowrap;
+}

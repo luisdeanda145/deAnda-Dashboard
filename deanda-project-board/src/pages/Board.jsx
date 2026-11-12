@@ -1,14 +1,26 @@
 import { useState } from 'react'
 import Icon from '../components/Icon'
-import { Avatar, PageHead, Prio, Select, TaskDates } from '../components/ui'
+import { Avatar, PageHead, Prio, Segmented, Select, TaskDates } from '../components/ui'
 import { ALL_PILLARS, PRIORITIES, STATUSES, TEAM, pillarTone } from '../data/board'
-import { hrs, pts, todayISO } from '../lib/format'
+import { addDays, hrs, pts, sameWeek, todayISO } from '../lib/format'
 import { useApp } from '../lib/store'
 
 const ANY_OWNER = 'Everyone'
 const ANY_PILLAR = 'All pillars'
 const ANY_PRIO = 'Any priority'
 const CAP = 30
+const WHEN = ['All', 'Today', 'Yesterday', 'This week']
+
+/** the day a task belongs to: when it was done, or when it's due */
+const dayOf = (t) => (t.status === 'Done' ? t.completed || t.due : t.due)
+function inWhen(t, when, today) {
+  if (when === 'All') return true
+  const d = dayOf(t)
+  if (!d) return false
+  if (when === 'Today') return d === today
+  if (when === 'Yesterday') return d === addDays(today, -1)
+  return sameWeek(d, today)
+}
 
 /** Kanban by status: drag a card to another lane, or use its arrow to move it on. */
 export default function Board() {
@@ -16,12 +28,18 @@ export default function Board() {
   const [owner, setOwner] = useState(ANY_OWNER)
   const [pillar, setPillar] = useState(ANY_PILLAR)
   const [prio, setPrio] = useState(ANY_PRIO)
+  const [when, setWhen] = useState('All')
   const [drag, setDrag] = useState(null)
   const [over, setOver] = useState(null)
   const [open, setOpen] = useState({})
 
+  const today = todayISO()
   const list = tasks.filter(
-    (t) => (owner === ANY_OWNER || t.owner === owner) && (pillar === ANY_PILLAR || t.pillar === pillar) && (prio === ANY_PRIO || t.priority === prio),
+    (t) =>
+      (owner === ANY_OWNER || t.owner === owner) &&
+      (pillar === ANY_PILLAR || t.pillar === pillar) &&
+      (prio === ANY_PRIO || t.priority === prio) &&
+      inWhen(t, when, today),
   )
 
   const move = (id, status) => {
@@ -40,7 +58,7 @@ export default function Board() {
   }
   const nextOf = (s) => STATUSES[Math.min(STATUSES.length - 1, STATUSES.findIndex((x) => x.id === s) + 1)].id
 
-  const filtered = owner !== ANY_OWNER || pillar !== ANY_PILLAR || prio !== ANY_PRIO
+  const filtered = owner !== ANY_OWNER || pillar !== ANY_PILLAR || prio !== ANY_PRIO || when !== 'All'
 
   return (
     <>
@@ -52,6 +70,7 @@ export default function Board() {
 
       <div className="filter-bar rise" style={{ '--d': 1 }}>
         <div className="filters">
+          <Segmented value={when} options={WHEN} onChange={setWhen} />
           <Select value={owner} options={[ANY_OWNER, ...TEAM.map((p) => p.name)]} onChange={setOwner} align="left" prefix={<Icon name="user" size={15} />} />
           <Select value={pillar} options={[ANY_PILLAR, ...ALL_PILLARS]} onChange={setPillar} align="left" prefix={<Icon name="layers" size={15} />} />
           <Select value={prio} options={[ANY_PRIO, ...PRIORITIES.map((p) => p.id)]} onChange={setPrio} align="left" prefix={<Icon name="flag" size={15} />} />
@@ -63,6 +82,7 @@ export default function Board() {
                 setOwner(ANY_OWNER)
                 setPillar(ANY_PILLAR)
                 setPrio(ANY_PRIO)
+                setWhen('All')
               }}
             >
               Clear

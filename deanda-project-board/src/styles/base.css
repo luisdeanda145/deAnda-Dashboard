@@ -467,7 +467,7 @@ img {
 .seg {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(var(--n), 1fr);
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
   padding: 4px;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.16);
