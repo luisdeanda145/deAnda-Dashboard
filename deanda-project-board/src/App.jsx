@@ -32,6 +32,7 @@ import Insights from './pages/Insights'
 import Settings from './pages/Settings'
 import ManageSheet from './components/ManageSheet'
 import Guide from './pages/Guide'
+import Online from './components/Online'
 
 const VIEWS = {
   overview: Overview,
@@ -205,6 +206,11 @@ export default function App() {
       stop()
     }
   }, [userId, toast])
+
+  /* who else has the board open (just you in local mode) */
+  const [onlineNow, setOnlineNow] = useState([])
+  useEffect(() => api.watchPresence(userId ? myName : null, setOnlineNow), [userId, myName])
+  const online = useMemo(() => (api.connected ? onlineNow : myName ? [myName] : []), [onlineNow, myName])
 
   const sendMessage = useCallback(
     async (to, body) => {
@@ -555,6 +561,7 @@ export default function App() {
       me,
       session,
       reload,
+      online,
       messages: monthMsgs,
       myName,
       unread,
@@ -572,7 +579,7 @@ export default function App() {
       removeWorkstream,
       manage: (what, extra) => setSheet({ manage: what, ...extra }),
     }),
-    [page, go, settings, set, toast, spatial, side, right, tasks, addTask, patchTask, removeTask, toggleDone, openTask, month, today, board, archive, me, session, reload, monthMsgs, myName, unread, sendMessage, markRead, preset, dir, addPerson, removePerson, addPillar, removePillar, addWorkstream, removeWorkstream],
+    [page, go, settings, set, toast, spatial, side, right, tasks, addTask, patchTask, removeTask, toggleDone, openTask, month, today, board, archive, me, session, reload, monthMsgs, online, myName, unread, sendMessage, markRead, preset, dir, addPerson, removePerson, addPillar, removePillar, addWorkstream, removeWorkstream],
   )
 
   const View = VIEWS[page]
@@ -595,6 +602,7 @@ export default function App() {
       <main ref={stage} className={`stage${sheet ? ' sheet-open' : ''}`} data-layout={spatial ? 'spatial' : 'flat'}>
         <Environment today={today} />
         <div className={`space${side ? '' : ' no-side'}${right ? '' : ' no-right'}${booting ? ' booting' : ''}`} data-page={page}>
+          <Online />
           <Sidebar />
 
           <section className="win main" aria-label={label}>

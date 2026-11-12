@@ -258,6 +258,22 @@ export function watchMessages(onChange) {
   return () => supabase.removeChannel(channel)
 }
 
+/* ---------------- who's online ----------------
+   Supabase Realtime presence: everyone with the board open joins one
+   channel under their team name. Nothing is stored in the database. */
+
+/** Calls `onChange(names)` whenever someone opens or closes the board; returns a function that leaves. */
+export function watchPresence(name, onChange) {
+  if (!connected || !name) return () => {}
+  const channel = supabase.channel('online', { config: { presence: { key: name } } })
+  channel
+    .on('presence', { event: 'sync' }, () => onChange(Object.keys(channel.presenceState())))
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') channel.track({ since: new Date().toISOString() })
+    })
+  return () => supabase.removeChannel(channel)
+}
+
 /* ---------------- sign-in ---------------- */
 
 export const getSession = async () => (connected ? (await supabase.auth.getSession()).data.session : null)
