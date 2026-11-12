@@ -58,7 +58,9 @@ the access rules.
 shows how many were edited, added and skipped. A task someone already changed in
 the app is skipped rather than overwritten, nothing is deleted, and running it
 twice changes nothing. Then `remove-2026-11-brayden.sql` deletes the 7 tasks no
-longer on Brayden's tab. (`seed.sql` already reflects both for a fresh setup.)
+longer on Brayden's tab. `sync-2026-11-11-grace.sql` then brings in
+Grace's Nov 11 updates from the live Google Sheet (7 edited, 12 new). (`seed.sql`
+already reflects all of these for a fresh setup.)
 
 ## How the month reset works
 
