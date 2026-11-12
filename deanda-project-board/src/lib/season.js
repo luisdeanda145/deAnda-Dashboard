@@ -22,8 +22,12 @@ const shift = (iso, days) => {
   return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`
 }
 
+/** TEMPORARY preview: forces one season everywhere. Set back to null to follow the calendar. */
+const FORCE = 'christmas'
+
 /** Which background a day gets: 'fall', 'christmas' or 'default' */
 export function seasonFor(iso) {
+  if (FORCE) return FORCE
   const year = Number(iso.slice(0, 4))
   const tg = thanksgiving(year)
   if (iso >= shift(tg, -7) && iso <= tg) return 'fall'
