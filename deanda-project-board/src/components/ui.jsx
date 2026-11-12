@@ -52,12 +52,16 @@ export function Select({ value, options, onChange, align = 'right', small, prefi
 }
 
 /** Round photo or gradient monogram, with an optional presence dot. */
+/* people who use a picture instead of their initials */
+const PICTURES = { Luis: '/badge.svg' }
+
 export function Avatar({ person, size = 36, status }) {
   const name = typeof person === 'string' ? person : person.name
   const hue = (name.charCodeAt(0) * 37 + name.length * 11) % 360
+  const picture = person.photo || PICTURES[name]
   return (
-    <span className="avatar" style={{ width: size, height: size, '--h': hue, fontSize: size * 0.36 }}>
-      {person.photo ? <img src={person.photo} alt="" /> : initials(name)}
+    <span className={`avatar${PICTURES[name] ? ' avatar-crest' : ''}`} style={{ width: size, height: size, '--h': hue, fontSize: size * 0.36 }}>
+      {picture ? <img src={picture} alt="" /> : initials(name)}
       {status && <i className={`presence ${status}`} />}
     </span>
   )
