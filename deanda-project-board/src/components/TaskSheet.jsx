@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Icon from './Icon'
 import { Avatar, Segmented, Select } from './ui'
 import { ALL_PILLARS, PRIORITIES, STATUSES, TEAM, USER, workstreamsFor } from '../data/board'
-import { todayISO } from '../lib/format'
+import { fmtMonth, todayISO } from '../lib/format'
 import { useApp } from '../lib/store'
 
 const NONE = '—'
@@ -57,7 +57,9 @@ function Hours({ value, onChange, label }) {
 
 /** Create or edit one row of the board — every column of a personal tab. */
 export default function TaskSheet({ task, hint, onClose }) {
-  const { addTask, patchTask, removeTask, toast, me } = useApp()
+  const { addTask, patchTask, removeTask, toast, me, month } = useApp()
+  /* earlier months are closed: their totals are final, so a task can't be finished in one */
+  const monthStart = `${month}-01`
   const isNew = !task.id
   const [t, setT] = useState(() => ({ ...blank(me || USER.name), ...task }))
   const [err, setErr] = useState('')
@@ -70,6 +72,10 @@ export default function TaskSheet({ task, hint, onClose }) {
     e?.preventDefault()
     if (!t.title.trim()) {
       setErr('Give the task a name')
+      return
+    }
+    if (t.status === 'Done' && t.completed && t.completed < monthStart) {
+      setErr(`${fmtMonth(t.completed.slice(0, 7))} is closed. Use a completed date in ${fmtMonth(month)}.`)
       return
     }
     const clean = { ...t, title: t.title.trim(), notes: t.notes?.trim() || null }
@@ -95,7 +101,7 @@ export default function TaskSheet({ task, hint, onClose }) {
 
   return (
     <div className="sheet-wrap" onPointerDown={(e) => e.target === e.currentTarget && onClose()}>
-      <form className={`sheet task-sheet${isNew ? ' is-new' : ''}`} role="dialog" aria-label={isNew ? 'New task' : 'Edit task'} onSubmit={save} onKeyDown={(e) => e.key === 'Escape' && !e.currentTarget.querySelector('.select.open') && onClose()}>
+      <form className={`sheet task-sheet${isNew ? ' is-new' : ''}`} role="dialog" aria-label={isNew ? 'New task' : 'Edit task'} noValidate onSubmit={save} onKeyDown={(e) => e.key === 'Escape' && !e.currentTarget.querySelector('.select.open') && onClose()}>
         <header>
           <span className="tu-ic">
             <Icon name={isNew ? 'plus' : 'edit'} size={21} />
@@ -166,6 +172,7 @@ export default function TaskSheet({ task, hint, onClose }) {
               type="date"
               className="date-in"
               value={t.completed || ''}
+              min={monthStart}
               disabled={t.status !== 'Done'}
               title={t.status !== 'Done' ? 'Set when the task is Done' : undefined}
               onChange={(e) => put({ completed: e.target.value || null })}

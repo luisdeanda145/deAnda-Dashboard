@@ -93,6 +93,26 @@ insert into public.board_meta (key, value)
 values ('first_month', to_char(now() at time zone 'America/New_York', 'YYYY-MM'))
 on conflict (key) do nothing;
 
+-- ---------------- closed months stay closed ----------------
+-- A month's totals are final once it closes, and its completed tasks are
+-- cleared. So a task can't be marked done with a date in a closed month: it
+-- would vanish from the board and its hours would count nowhere.
+create or replace function public.guard_closed_months() returns trigger
+language plpgsql as $$
+begin
+  if new.status = 'Done' and new.completed is not null
+     and (tg_op = 'INSERT' or new.completed is distinct from old.completed or new.status is distinct from old.status)
+     and exists (select 1 from public.months where month = to_char(new.completed, 'YYYY-MM')) then
+    raise exception '% is already closed. Use a completed date in the current month.', to_char(new.completed, 'FMMonth YYYY')
+      using errcode = 'check_violation';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists tasks_closed_month_guard on public.tasks;
+create trigger tasks_closed_month_guard before insert or update on public.tasks
+  for each row execute function public.guard_closed_months();
+
 -- ---------------- who gets in ----------------
 -- Signed in with a @deanda.capital account. (Google sign-in is also set to
 -- "Internal", so this is a second lock on the same door.)
