@@ -274,6 +274,34 @@ export function watchPresence(name, onChange) {
   return () => supabase.removeChannel(channel)
 }
 
+/* ---------------- assistant ----------------
+   Short summaries of the board for a period, from the "assistant" Edge
+   Function (supabase/functions/assistant). Read-only. */
+export const ASSISTANT_PERIODS = [
+  { id: 'today', label: 'Today' },
+  { id: '3days', label: '3 days' },
+  { id: 'week', label: 'Week' },
+  { id: 'month', label: 'Month' },
+]
+
+/** history: earlier { role: 'user' | 'assistant', text } turns, for follow-up questions */
+export async function askAssistant({ period, question, history }) {
+  if (!connected) throw new Error('The assistant works on the live board only.')
+  const { data, error } = await supabase.functions.invoke('assistant', { body: { period, question, history } })
+  if (error) {
+    let message = 'Couldn’t reach the assistant. Try again.'
+    try {
+      const body = await error.context.json()
+      if (body?.error) message = body.error
+    } catch {
+      /* not JSON */
+    }
+    throw new Error(message)
+  }
+  if (data?.error) throw new Error(data.error)
+  return data?.reply || 'No answer came back.'
+}
+
 /* ---------------- sign-in ---------------- */
 
 export const getSession = async () => (connected ? (await supabase.auth.getSession()).data.session : null)
