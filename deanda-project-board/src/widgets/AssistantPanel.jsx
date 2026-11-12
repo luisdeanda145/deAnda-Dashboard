@@ -17,7 +17,7 @@ export default function AssistantPanel({ onClose }) {
   return (
     <section className="win widget assistant-panel" role="dialog" aria-label="AI assistant" onKeyDown={(e) => e.key === 'Escape' && onClose()}>
       <header className="as-head">
-        <ThinkingOrb state="searching" size={20} theme="dark" aria-hidden="true" />
+        <ThinkingOrb state="breathing" size={20} theme="dark" aria-hidden="true" />
         <h3>Assistant</h3>
         <span className="as-badge">
           <Icon name="alert" size={12} stroke={2.2} /> Under construction
