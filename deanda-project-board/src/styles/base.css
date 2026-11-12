@@ -407,13 +407,15 @@ img {
   border-radius: 50%;
   object-fit: cover;
 }
-/* a club crest fills the circle on a clean white face */
+/* a round club crest fills the whole circle, edge to edge */
 .avatar-crest {
-  background: #fff;
+  background: #1c2c5b;
+  box-shadow: none;
 }
 .avatar-crest img {
-  object-fit: contain;
-  padding: 6%;
+  object-fit: cover;
+  transform: scale(1.04);
+  clip-path: circle(48%);
 }
 .presence {
   position: absolute;
