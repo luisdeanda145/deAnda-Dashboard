@@ -24,27 +24,6 @@
 [data-season='christmas'] .contacts::before {
   background: linear-gradient(168deg, rgb(226 70 88 / 0.9) 0%, rgb(178 22 46 / 0.92) 50%, rgb(110 8 26 / 0.94) 100%);
 }
-[data-season='christmas'] .cloud:nth-child(1) {
-  --c: rgb(255 236 238 / 0.7) !important;
-}
-[data-season='christmas'] .cloud:nth-child(2) {
-  --c: rgb(255 150 160 / 0.6) !important;
-}
-[data-season='christmas'] .cloud:nth-child(3) {
-  --c: rgb(90 4 20 / 0.6) !important;
-}
-[data-season='christmas'] .cloud:nth-child(4) {
-  --c: rgb(255 210 215 / 0.55) !important;
-}
-[data-season='christmas'] .cloud:nth-child(5) {
-  --c: rgb(240 110 125 / 0.55) !important;
-}
-[data-season='christmas'] .cloud:nth-child(6) {
-  --c: rgb(255 240 225 / 0.5) !important;
-}
-[data-season='christmas'] .cloud:nth-child(7) {
-  --c: rgb(255 190 170 / 0.45) !important;
-}
 
 /* small blue-tinted surfaces */
 [data-season='christmas'] .mt-ic {
