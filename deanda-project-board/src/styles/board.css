@@ -510,6 +510,13 @@
   flex-wrap: wrap;
   gap: 6px 9px;
 }
+.tcard footer .tcard-owner {
+  flex: 1 0 100%;
+  min-width: 0;
+  gap: 7px;
+  color: var(--ink-2);
+  font-weight: 600;
+}
 .tcard footer .t-dates {
   flex-shrink: 1;
   min-width: 0;

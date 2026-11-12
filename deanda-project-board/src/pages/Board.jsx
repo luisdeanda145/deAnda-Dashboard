@@ -158,7 +158,10 @@ export default function Board() {
                       {t.workstream && <span className="deal-co">{t.workstream}</span>}
                       {t.notes && s.id === 'Blocked' && <span className="tcard-note">{t.notes}</span>}
                       <footer>
-                        <Avatar person={t.owner} size={22} />
+                        <span className="tcard-owner">
+                          <Avatar person={t.owner} size={22} />
+                          {t.owner}
+                        </span>
                         <TaskDates t={t} stack={t.status === 'Done'} />
                         {t.points != null && <span title="Story points">{pts(t.points)}</span>}
                         {t.hours != null && (
