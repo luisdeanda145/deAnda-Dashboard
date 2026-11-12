@@ -6,8 +6,6 @@ import { fmtMonth, todayISO } from '../lib/format'
 import { useApp } from '../lib/store'
 
 const NONE = '—'
-/** the usual story-point scale */
-const POINTS = [NONE, '1', '2', '3', '5', '8', '13']
 const blank = (me) => ({
   title: '',
   owner: me,
@@ -31,24 +29,25 @@ function Field({ label, children, wide }) {
   )
 }
 
-function Hours({ value, onChange, label }) {
-  const step = (d) => onChange(Math.max(0, Math.round(((value || 0) + d) * 100) / 100))
+/** A number with − and + either side: hours in quarter steps, story points in whole steps. */
+function Stepper({ value, onChange, label, unit, step }) {
+  const nudge = (d) => onChange(Math.max(0, Math.round(((value || 0) + d) * 100) / 100))
   return (
     <div className="hours-in">
-      <button type="button" aria-label={`Less ${label}`} onClick={() => step(-0.25)}>
+      <button type="button" aria-label={`Less ${label}`} onClick={() => nudge(-step)}>
         −
       </button>
       <input
         type="number"
         min="0"
-        step="0.25"
-        inputMode="decimal"
+        step={step}
+        inputMode={step < 1 ? 'decimal' : 'numeric'}
         value={value ?? ''}
         placeholder="0"
         onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))}
       />
-      <em>hrs</em>
-      <button type="button" aria-label={`More ${label}`} onClick={() => step(0.25)}>
+      <em>{unit}</em>
+      <button type="button" aria-label={`More ${label}`} onClick={() => nudge(step)}>
         +
       </button>
     </div>
@@ -179,10 +178,10 @@ export default function TaskSheet({ task, hint, onClose }) {
             />
           </Field>
           <Field label="Story points">
-            <Segmented value={t.points == null ? NONE : String(t.points)} options={POINTS} onChange={(v) => put({ points: v === NONE ? null : Number(v) })} />
+            <Stepper label="story points" unit="pts" step={1} value={t.points} onChange={(points) => put({ points })} />
           </Field>
           <Field label="Hours">
-            <Hours label="hours" value={t.hours} onChange={(hours) => put({ hours })} />
+            <Stepper label="hours" unit="hrs" step={0.25} value={t.hours} onChange={(hours) => put({ hours })} />
           </Field>
           <Field label="Notes" wide>
             <textarea rows={2} value={t.notes || ''} placeholder="Context, links, who you’re waiting on…" onChange={(e) => put({ notes: e.target.value })} />
