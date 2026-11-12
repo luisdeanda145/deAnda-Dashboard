@@ -405,6 +405,15 @@
   }
   .msgs-head small {
     flex: 1 1 100%;
+    order: 2;
+  }
+  .msgs-head .msgs-close {
+    order: 1;
+    margin-left: auto;
+  }
+  /* opening it scrolls it clear of the tab bar */
+  .msgs {
+    scroll-margin: 12px 0 calc(var(--tabbar) + 18px);
   }
 
   /* ---------------- team ---------------- */

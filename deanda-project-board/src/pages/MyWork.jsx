@@ -5,7 +5,7 @@ import { TEAM, USER } from '../data/board'
 import { fmtMonth, todayISO } from '../lib/format'
 import { isDone, personal } from '../lib/selectors'
 import DateGroups from '../components/DateGroups'
-import Messages from '../components/Messages'
+import Messages, { MessagesButton } from '../components/Messages'
 import { useApp } from '../lib/store'
 
 const FILTERS = ['All', 'Open', 'Completed']
@@ -14,6 +14,7 @@ export default function MyWork() {
   const { tasks, month, me, setMe, addTask, openTask, toast } = useApp()
   const [filter, setFilter] = useState('All')
   const [draft, setDraft] = useState('')
+  const [msgOpen, setMsgOpen] = useState(false)
   const p = personal(tasks, me, month)
   const today = todayISO()
 
@@ -36,6 +37,7 @@ export default function MyWork() {
   return (
     <>
       <PageHead title={title} sub={`${me}’s tab · ${fmtMonth(month)} to-do list`}>
+        <MessagesButton open={msgOpen} onClick={() => setMsgOpen((o) => !o)} />
         <Select
           value={me}
           options={TEAM.map((x) => x.name)}
@@ -56,7 +58,7 @@ export default function MyWork() {
         <Stat d={4} icon="bolt" label="Hours this month" value={p.realMonth} />
       </div>
 
-      <Messages key={me} />
+      {msgOpen && <Messages key={me} onClose={() => setMsgOpen(false)} />}
 
       <form className="add-task rise" style={{ '--d': 5 }} onSubmit={add}>
         <Icon name="plus" size={18} stroke={2} />

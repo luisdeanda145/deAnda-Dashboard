@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Icon from './Icon'
 import { Avatar, Select } from './ui'
 import { TEAM } from '../data/board'
@@ -17,11 +17,33 @@ function when(iso) {
 }
 
 /**
+ * The small chat button in My Work's header that opens the messages card.
+ * Shows your unread count on your own tab.
+ */
+export function MessagesButton({ open, onClick }) {
+  const { me, myName, unread } = useApp()
+  const count = myName && me === myName ? unread : 0
+  const label = myName && me !== myName ? `Message ${me}` : 'Messages'
+  return (
+    <button
+      type="button"
+      className={`round-btn lg msg-toggle${open ? ' on' : ''}${count ? ' has-new' : ''}`}
+      aria-label={count ? `${label}, ${count} unread` : label}
+      aria-expanded={open}
+      onClick={onClick}
+    >
+      <Icon name="chat" size={20} />
+      {count > 0 && <b>{count}</b>}
+    </button>
+  )
+}
+
+/**
  * Messages on My Work. On your own tab: your latest 10, with unread ones marked
  * New (they count as read after a moment on screen), and a box to message anyone.
  * On a teammate's tab: a box to message them, and what you've sent them.
  */
-export default function Messages() {
+export default function Messages({ onClose }) {
   const { me, messages, myName, sendMessage, markRead } = useApp()
   const mine = !!myName && me === myName
   const others = TEAM.map((p) => p.name).filter((n) => n !== myName)
@@ -29,6 +51,12 @@ export default function Messages() {
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [seen, setSeen] = useState(() => new Set()) // read while you were here: stays marked New until you leave
+  const box = useRef(null)
+
+  /* on a phone the card opens below the stats: bring it into view */
+  useEffect(() => {
+    box.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [])
 
   const list = (mine ? messages.filter((m) => m.to_name === myName) : messages.filter((m) => m.to_name === me && m.from_name === myName))
     .slice()
@@ -60,11 +88,14 @@ export default function Messages() {
 
   if (!myName) {
     return (
-      <section className="card msgs rise" style={{ '--d': 5 }}>
+      <section className="card msgs rise" style={{ '--d': 5 }} ref={box}>
         <header className="msgs-head">
           <h2>
             <Icon name="chat" size={18} /> Messages
           </h2>
+        <button type="button" className="round-btn msgs-close" aria-label="Close messages" onClick={onClose}>
+          <Icon name="close" size={14} stroke={2} />
+        </button>
         </header>
         <p className="muted-line">Messages need your sign-in to match a name on the team. Ask an admin to add you in Settings → Team.</p>
       </section>
@@ -73,13 +104,16 @@ export default function Messages() {
 
   const fresh = list.filter((m) => mine && (!m.read_at || seen.has(m.id))).length
   return (
-    <section className={`card msgs rise${fresh ? ' has-new' : ''}`} style={{ '--d': 5 }}>
+    <section className={`card msgs rise${fresh ? ' has-new' : ''}`} style={{ '--d': 5 }} ref={box}>
       <header className="msgs-head">
         <h2>
           <Icon name="chat" size={18} /> {mine ? 'Messages' : `Message ${me}`}
           {fresh > 0 && <span className="msgs-new">{fresh} new</span>}
         </h2>
         <small>{mine ? 'Your latest 10 · cleared each month' : `What you've sent ${me} this month`}</small>
+        <button type="button" className="round-btn msgs-close" aria-label="Close messages" onClick={onClose}>
+          <Icon name="close" size={14} stroke={2} />
+        </button>
       </header>
 
       {list.length > 0 ? (
