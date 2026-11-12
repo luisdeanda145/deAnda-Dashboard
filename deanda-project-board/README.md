@@ -36,20 +36,9 @@ Everything date-based is worked out from today's date each time the page draws, 
 
 Click any task anywhere to edit every column of its row. `N` adds a task, `⌘K` searches tasks, people and pillars.
 
-## Connecting the backend
+## Backend (Supabase)
 
-All reads and writes go through **`src/lib/api.js`** (`fetchTasks`, `createTask`, `updateTask`, `deleteTask`). Set `VITE_API_URL` and fill in the commented `fetch` calls. The UI already updates optimistically, so nothing else needs to change. The task row shape is documented at the top of that file.
-
-| What | Where |
-| --- | --- |
-| Signed-in user | `USER` in `src/data/board.js` |
-| Default team, statuses, priorities, pillars, workstreams (the Lists tab) | `src/data/board.js` |
-| Team, pillars and workstreams as edited in the app | `src/lib/directory.js` (localStorage today) |
-| Reporting month, month close and archive | The board is always the current calendar month (`month` in `src/App.jsx`). On the 1st the month that ended is archived through `archiveMonth` / `fetchArchive` in `src/lib/api.js` (kept in this browser until the backend exists); the board rules are `onBoard` / `closeMonth` in `src/lib/selectors.js`. |
-| The sheet's formulas (summary, by person, by pillar, by workstream, daily hours) | `src/lib/selectors.js` |
-| Imported tasks (538 rows from the personal tabs) | `src/data/tasks.json` |
-| Background photo | `public/background.jpg` |
-| New styles for this board | `src/styles/board.css` (the v8 system is untouched in `base.css`, `space.css`, `overview.css`, `pages.css`) |
+With `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set, the board reads and writes Supabase and asks for a @deanda.capital Google sign-in; without them it runs on the bundled spreadsheet data in the browser. Setup steps, the database schema, the starting data and the monthly reset job are in **`supabase/`** (start with `supabase/README.md`). All reads and writes go through **`src/lib/api.js`**.
 
 ## Notes on the import
 

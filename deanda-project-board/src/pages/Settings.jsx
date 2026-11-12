@@ -5,6 +5,7 @@ import { PILLARS, TEAM, USER, WORKSTREAMS } from '../data/board'
 import { fmtDay, fmtMonth } from '../lib/format'
 import { focusOf, shiftMonth } from '../lib/selectors'
 import { useApp } from '../lib/store'
+import { connected, signOut } from '../lib/api'
 
 function Slider({ label, hint, value, min, max, step = 1, unit = '', onChange }) {
   const p = ((value - min) / (max - min)) * 100
@@ -24,7 +25,7 @@ function Slider({ label, hint, value, min, max, step = 1, unit = '', onChange })
 }
 
 export default function Settings() {
-  const { settings, set, toast, month, tasks, archive, go, manage, removePerson, removePillar, removeWorkstream } = useApp()
+  const { settings, set, toast, month, tasks, archive, go, manage, removePerson, removePillar, removeWorkstream, session } = useApp()
   /* removals refuse while tasks still point at the thing; say why */
   const attempt = (problem, done) => toast(problem ? { icon: 'alert', title: 'Can’t remove yet', text: problem } : { icon: 'trash', title: 'Removed', text: done })
 
@@ -69,19 +70,25 @@ export default function Settings() {
           <div className="set-row">
             <div>
               <b>Data source</b>
-              <small>{tasks.length} tasks on this month’s board, first imported from Project_Board_Nov_2026.xlsx; changes are kept in memory until the backend is connected</small>
+              <small>
+                {connected
+                  ? `${tasks.length} tasks on this month’s board, saved in the shared database. Changes are live for the whole team.`
+                  : `${tasks.length} tasks on this month’s board from Project_Board_Nov_2026.xlsx, kept in this browser only (no database configured).`}
+              </small>
             </div>
-            <span className="status tone-amber">Local</span>
+            <span className={`status tone-${connected ? 'teal' : 'amber'}`}>{connected ? 'Live' : 'Local'}</span>
           </div>
-          <div className="set-row">
-            <div>
-              <b>Backend</b>
-              <small>Set VITE_API_URL and fill in src/lib/api.js</small>
+          {connected && session && (
+            <div className="set-row">
+              <div>
+                <b>Signed in</b>
+                <small>{session.user.email}</small>
+              </div>
+              <button type="button" className="chip" onClick={() => signOut()}>
+                Sign out
+              </button>
             </div>
-            <button type="button" className="chip" onClick={() => toast({ icon: 'apps', title: 'Not connected yet', text: 'See src/lib/api.js' })}>
-              Connect
-            </button>
-          </div>
+          )}
         </section>
 
         <section className="card set-group rise" style={{ '--d': 2 }}>

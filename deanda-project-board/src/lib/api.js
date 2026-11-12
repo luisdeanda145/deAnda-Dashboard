@@ -1,11 +1,12 @@
 /* ============================================================
    Backend seam. Every read and write the UI makes goes through
-   these functions, so connecting a real backend means replacing
-   the bodies below and nothing else.
+   these functions.
 
-   Today they resolve against the tasks imported from
-   Project_Board_Nov_2026.xlsx (src/data/tasks.json) and keep
-   changes in memory only.
+   With VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY set, they talk
+   to Supabase (tables and rules in supabase/schema.sql). Without
+   them, the app runs on the tasks imported from
+   Project_Board_Nov_2026.xlsx (src/data/tasks.json), keeping
+   changes in memory and the month archive in this browser.
 
    A task row (one line of a personal tab / the ToDo Feed):
    {
@@ -24,62 +25,122 @@
    }
    ============================================================ */
 import SEED from '../data/tasks.json'
+import { supabase } from './supabase'
 
-const API_URL = import.meta.env.VITE_API_URL || '' // e.g. https://api.deanda.capital/board
+/** True when the app reads and writes the shared database. */
+export const connected = !!supabase
+
 const latency = (v) => new Promise((r) => setTimeout(() => r(v), 120))
-
-/** GET /tasks?month=YYYY-MM */
-export async function fetchTasks(/* month */) {
-  if (API_URL) {
-    // const res = await fetch(`${API_URL}/tasks?month=${month}`)
-    // return res.json()
-  }
-  return latency(SEED.map((t) => ({ ...t })))
+const must = ({ data, error }) => {
+  if (error) throw error
+  return data
 }
 
-/** POST /tasks */
+const COLS = 'id, owner, title, pillar, workstream, priority, status, due, completed, points, hours, notes'
+const FIELDS = ['owner', 'title', 'pillar', 'workstream', 'priority', 'status', 'due', 'completed', 'points', 'hours', 'notes']
+/** only real columns go to the database (the UI adds flags like `fresh`) */
+const pick = (o) => Object.fromEntries(FIELDS.filter((k) => k in o).map((k) => [k, o[k] === '' ? null : o[k]]))
+const row = (r) => ({ ...r, points: r.points == null ? null : Number(r.points), hours: r.hours == null ? null : Number(r.hours) })
+
+/* ---------------- tasks ---------------- */
+
+/** Every task on the board (the database only holds the current month's board). */
+export async function fetchTasks() {
+  if (!connected) return latency(SEED.map((t) => ({ ...t })))
+  const out = []
+  for (let from = 0; ; from += 1000) {
+    const page = must(await supabase.from('tasks').select(COLS).order('created_at').order('id').range(from, from + 999))
+    out.push(...page.map(row))
+    if (page.length < 1000) return out
+  }
+}
+
 export async function createTask(task) {
-  if (API_URL) {
-    // const res = await fetch(`${API_URL}/tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(task) })
-    // return res.json()
-  }
-  return latency({ ...task, id: task.id || `t${Date.now().toString(36)}` })
+  if (!connected) return latency({ ...task, id: task.id || `t${Date.now().toString(36)}` })
+  return row(must(await supabase.from('tasks').insert(pick(task)).select(COLS).single()))
 }
 
-/** PATCH /tasks/:id */
 export async function updateTask(id, patch) {
-  if (API_URL) {
-    // const res = await fetch(`${API_URL}/tasks/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) })
-    // return res.json()
-  }
-  return latency({ id, ...patch })
+  if (!connected) return latency({ id, ...patch })
+  must(await supabase.from('tasks').update(pick(patch)).eq('id', id))
+  return { id, ...patch }
 }
 
-/** DELETE /tasks/:id */
 export async function deleteTask(id) {
-  if (API_URL) {
-    // await fetch(`${API_URL}/tasks/${id}`, { method: 'DELETE' })
-  }
-  return latency({ id })
+  if (!connected) return latency({ id })
+  must(await supabase.from('tasks').delete().eq('id', id))
+  return { id }
 }
 
-/** DELETE /tasks  — body: { ids } — the completed tasks a new month clears */
+/** The completed tasks a new month clears. With the database, its monthly job does this. */
 export async function deleteTasks(ids) {
-  if (API_URL) {
-    // await fetch(`${API_URL}/tasks`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) })
-  }
   return latency({ ids })
 }
 
-/* ---------------- month archive ----------------
-   When a month ends, only its totals are saved here; the completed
-   tasks themselves are deleted (deleteTasks) and open ones carry
-   over. Insights reads these totals back. Until the backend exists
-   they are kept in this browser.
+/** Calls `onChange` whenever anyone changes a task; returns a function that stops listening. */
+export function watchTasks(onChange) {
+  if (!connected) return () => {}
+  const channel = supabase
+    .channel('tasks')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, onChange)
+    .subscribe()
+  return () => supabase.removeChannel(channel)
+}
 
-   One row per closed month, e.g. a `months` table:
+/** The first rows to paint: the bundled data in local mode, nothing until loaded with the database. */
+export const initialTasks = () => (connected ? [] : SEED.map((t) => ({ ...t })))
+
+/* ---------------- team, pillars, workstreams ---------------- */
+
+/** { team, pillars, workstreams } from the database, or null in local mode. */
+export async function fetchDirectory() {
+  if (!connected) return null
+  const [team, pillars, workstreams] = await Promise.all([
+    supabase.from('team_members').select('name, role').order('sort').order('created_at'),
+    supabase.from('pillars').select('name, code, tone, blurb').order('sort').order('name'),
+    supabase.from('workstreams').select('name, pillar').order('sort').order('name'),
+  ])
+  return {
+    team: must(team).map((p) => (p.role ? p : { name: p.name })),
+    pillars: must(pillars),
+    workstreams: must(workstreams),
+  }
+}
+const nextSort = async (table) => {
+  const top = must(await supabase.from(table).select('sort').order('sort', { ascending: false }).limit(1))
+  return (top[0]?.sort ?? -1) + 1
+}
+export async function addPerson(p) {
+  if (connected) must(await supabase.from('team_members').insert({ name: p.name, role: p.role || null, sort: await nextSort('team_members') }))
+}
+export async function removePerson(name) {
+  if (connected) must(await supabase.from('team_members').delete().eq('name', name))
+}
+export async function addPillar(p) {
+  if (connected) must(await supabase.from('pillars').insert({ name: p.name, code: p.code, tone: p.tone, blurb: p.blurb || '', sort: await nextSort('pillars') }))
+}
+export async function removePillar(name) {
+  if (connected) must(await supabase.from('pillars').delete().eq('name', name)) // its workstreams go with it
+}
+export async function addWorkstream(w) {
+  if (connected) must(await supabase.from('workstreams').insert({ name: w.name, pillar: w.pillar, sort: await nextSort('workstreams') }))
+}
+export async function removeWorkstream(w) {
+  if (connected) must(await supabase.from('workstreams').delete().eq('name', w.name).eq('pillar', w.pillar))
+}
+
+/* ---------------- month archive ----------------
+   When a month ends, only its totals are saved; the completed tasks
+   themselves are deleted and open ones carry over. Insights reads
+   these totals back.
+
+   With the database, the `months` table holds them and its hourly job
+   (close_ended_months in supabase/schema.sql) does the closing. In local
+   mode the app closes months itself and keeps them in this browser.
+
+   One row per closed month:
    {
-     month:    'YYYY-MM'                 primary key
+     month:    'YYYY-MM'
      closedAt: ISO timestamp
      summary:  { tasks, open, closed, inProgress, notStarted, blocked,
                  pointsPlanned, pointsDone }        board at month end
@@ -87,9 +148,7 @@ export async function deleteTasks(ids) {
                  people, empty,
                  hoursByPerson: { name: hrs }, doneByPerson: { name: n },
                  hoursByPillar: { name: hrs }, doneByPillar: { name: n } }
-   }
-   The by-person / by-pillar maps can live in JSON columns or in their
-   own month_person / month_pillar tables. */
+   } */
 const ARCHIVE_KEY = 'dac-board-archive'
 const readArchive = () => {
   try {
@@ -99,31 +158,27 @@ const readArchive = () => {
   }
 }
 
-/** POST /months/:ym/close  — body: { month, closedAt, summary, stats } */
+/** Local mode only: the database closes months itself. */
 export async function archiveMonth(snapshot) {
-  if (API_URL) {
-    // await fetch(`${API_URL}/months/${snapshot.month}/close`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(snapshot) })
-  }
+  if (connected) return snapshot
   try {
     localStorage.setItem(ARCHIVE_KEY, JSON.stringify({ ...readArchive(), [snapshot.month]: snapshot }))
   } catch {
-    /* storage full or unavailable: the backend will hold it once connected */
+    /* storage full or unavailable */
   }
   return latency(snapshot)
 }
 
-/** GET /months  → { 'YYYY-MM': snapshot } for every closed month */
+/** { 'YYYY-MM': { month, closedAt, summary, stats } } for every closed month */
 export async function fetchArchive() {
-  if (API_URL) {
-    // const res = await fetch(`${API_URL}/months`)
-    // return res.json()
-  }
-  return latency(readArchive())
+  if (!connected) return latency(readArchive())
+  const rows = must(await supabase.from('months').select('month, closed_at, summary, stats').order('month'))
+  return Object.fromEntries(rows.map((m) => [m.month, { month: m.month, closedAt: m.closed_at, summary: m.summary, stats: m.stats }]))
 }
-export const initialArchive = readArchive
+export const initialArchive = () => (connected ? {} : readArchive())
 
 /* Which month the board was last open on, so a month that ended while
-   nobody had the app open still gets closed on the next visit. */
+   nobody had the app open still gets closed on the next visit (local mode). */
 const OPEN_KEY = 'dac-board-open-month'
 export const lastOpenMonth = () => {
   try {
@@ -140,5 +195,20 @@ export const markOpenMonth = (ym) => {
   }
 }
 
-/** The initial rows, available synchronously so the first paint has data. */
-export const initialTasks = () => SEED.map((t) => ({ ...t }))
+/* ---------------- sign-in ---------------- */
+
+export const getSession = async () => (connected ? (await supabase.auth.getSession()).data.session : null)
+export const onAuthChange = (cb) => {
+  if (!connected) return () => {}
+  const { data } = supabase.auth.onAuthStateChange((_event, session) => cb(session))
+  return () => data.subscription.unsubscribe()
+}
+export const signInWithGoogle = () =>
+  supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: location.origin + location.pathname,
+      queryParams: { hd: 'deanda.capital', prompt: 'select_account' },
+    },
+  })
+export const signOut = () => supabase.auth.signOut()

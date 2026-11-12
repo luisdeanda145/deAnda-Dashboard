@@ -14,6 +14,8 @@ import Palette from './components/Palette'
 import TaskSheet from './components/TaskSheet'
 import Toasts from './components/Toasts'
 import PhoneTabs from './components/PhoneTabs'
+import SignIn from './components/SignIn'
+import { TEAM_DOMAIN } from './lib/supabase'
 import HoursWidget from './widgets/HoursWidget'
 import QueueWidget from './widgets/QueueWidget'
 import HoursByDayWidget from './widgets/HoursByDayWidget'
@@ -66,6 +68,7 @@ function closeEnded(archive, tasks, open, now) {
 const BOOT = (() => {
   const archive = api.initialArchive()
   const now = todayISO().slice(0, 7)
+  if (api.connected) return { archive, closed: [], month: now } // the database closes months itself
   const snaps = closeEnded(archive, api.initialTasks(), api.lastOpenMonth(), now)
   snaps.forEach((snap) => {
     archive[snap.month] = snap
@@ -96,6 +99,11 @@ export default function App() {
   /* completed tasks from months that have ended were cleared when those months closed */
   const [tasks, setTasks] = useState(() => api.initialTasks().filter((t) => onBoard(t, BOOT.month)))
   const [archive, setArchive] = useState(BOOT.archive)
+  const [me, setMe] = useState(USER.name) // whose tab My Work shows
+  /* team, pillars, workstreams */
+  const [dir, setDir] = useState(loadDirectory)
+  applyDirectory(dir) // before any child renders, so they all read the edited lists
+  useEffect(() => saveDirectory(dir), [dir])
 
   const toast = useCallback((t) => {
     const id = Math.random().toString(36).slice(2)
@@ -103,6 +111,83 @@ export default function App() {
     setTimeout(() => setToasts((all) => all.filter((x) => x.id !== id)), 3200)
   }, [])
   const announceClosed = useCallback((ym) => toast({ icon: 'calendar', title: `${fmtMonth(ym)} closed`, text: 'Archived for Insights · a new month’s board has started' }), [toast])
+
+  /* ---------------- the shared database (when configured) ---------------- */
+  const [session, setSession] = useState(undefined) // undefined while checking, null when signed out
+  const userId = session?.user?.id
+  const named = useRef(false)
+  const latestUser = useRef(null)
+
+  /** Fetches the board, the lists and the closed months. On the first load after
+      signing in, whoever signed in becomes "you" when their first name is on the team. */
+  const reload = useCallback(
+    async (who) => {
+      if (!api.connected) return
+      try {
+        const [t, d, a] = await Promise.all([api.fetchTasks(), api.fetchDirectory(), api.fetchArchive()])
+        setTasks(t)
+        if (d) setDir(d)
+        setArchive(a)
+        if (who && d && !named.current) {
+          named.current = true
+          const meta = who.user_metadata || {}
+          const first = String(meta.full_name || meta.name || who.email || '').split(/[\s@.]/)[0]
+          const match = d.team.find((p) => same(p.name, first))
+          if (match) {
+            USER.name = match.name
+            USER.email = who.email
+            setMe(match.name)
+          }
+        }
+      } catch (e) {
+        toast({ icon: 'alert', title: 'Couldn’t load the board', text: e?.message || 'Check your connection' })
+      }
+    },
+    [toast],
+  )
+
+  /* signing in (or a session restored from last time) loads the board */
+  useEffect(() => {
+    if (!api.connected) return
+    let live = true
+    const seen = (s) => {
+      if (!live) return
+      setSession(s)
+      if (s && s.user.id !== latestUser.current) {
+        latestUser.current = s.user.id
+        reload(s.user)
+      }
+    }
+    api.getSession().then(seen)
+    const stop = api.onAuthChange(seen)
+    return () => {
+      live = false
+      stop()
+    }
+  }, [reload])
+
+  /* anyone's edit shows up for everyone: refetch shortly after a change */
+  useEffect(() => {
+    if (!userId) return
+    let t
+    const stop = api.watchTasks(() => {
+      clearTimeout(t)
+      t = setTimeout(() => api.fetchTasks().then(setTasks).catch(() => {}), 400)
+    })
+    return () => {
+      clearTimeout(t)
+      stop()
+    }
+  }, [userId])
+
+  /** A write the database refused: say so and put the board back as the database has it. */
+  const failed = useCallback(
+    (e) => {
+      toast({ icon: 'alert', title: 'Couldn’t save that', text: e?.message || 'Check your connection' })
+      reload()
+    },
+    [toast, reload],
+  )
 
   /* months that ended while nobody had the app open were closed at start-up; say so once */
   useEffect(() => {
@@ -125,6 +210,12 @@ export default function App() {
       latest.current.today = t
       setToday(t)
       if (t.slice(0, 7) === was.slice(0, 7)) return
+      if (api.connected) {
+        /* the database's hourly job closes the month; pick up the result now and once it has run */
+        reload()
+        setTimeout(reload, 65 * 60 * 1000)
+        return
+      }
       const snaps = closeEnded(latest.current.archive, latest.current.tasks, was.slice(0, 7), t.slice(0, 7))
       snaps.forEach((snap) => {
         api.archiveMonth(snap)
@@ -148,19 +239,15 @@ export default function App() {
       removeEventListener('focus', check)
       document.removeEventListener('visibilitychange', check)
     }
-  }, [announceClosed])
+  }, [announceClosed, reload])
 
   /* the board is always this calendar month's; past months are in Insights */
   const month = today.slice(0, 7)
   const board = useMemo(() => boardTasks(tasks, month), [tasks, month])
 
-  const [me, setMe] = useState(USER.name) // whose tab My Work shows
   const [preset, setPreset] = useState(null) // a filter handed to All Tasks
 
   /* ---------------- team, pillars, workstreams ---------------- */
-  const [dir, setDir] = useState(loadDirectory)
-  applyDirectory(dir) // before any child renders, so they all read the edited lists
-  useEffect(() => saveDirectory(dir), [dir])
 
   /* each returns an error message, or null when the change was made */
   const addPerson = useCallback(
@@ -170,9 +257,10 @@ export default function App() {
       const dup = dir.team.find((p) => same(p.name, name))
       if (dup) return `${dup.name} is already on the team`
       setDir((d) => ({ ...d, team: [...d.team, { name, ...(role?.trim() ? { role: role.trim() } : {}) }] }))
+      api.addPerson({ name, role: role?.trim() }).catch(failed)
       return null
     },
-    [dir],
+    [dir, failed],
   )
   const removePerson = useCallback(
     (name) => {
@@ -180,9 +268,10 @@ export default function App() {
       if (n) return `${name} still owns ${n} task${n === 1 ? '' : 's'}. Reassign them first.`
       if (name === USER.name) return 'You can’t remove yourself'
       setDir((d) => ({ ...d, team: d.team.filter((p) => p.name !== name) }))
+      api.removePerson(name).catch(failed)
       return null
     },
-    [tasks],
+    [tasks, failed],
   )
   const addPillar = useCallback(
     ({ name, tone, blurb }) => {
@@ -190,10 +279,12 @@ export default function App() {
       if (!name) return 'Give the pillar a name'
       const dup = dir.pillars.find((p) => same(p.name, name))
       if (dup) return `There is already a ${dup.name} pillar`
-      setDir((d) => ({ ...d, pillars: [...d.pillars, { name, code: codeFor(name), tone: tone || 'blue', blurb: blurb?.trim() || '' }] }))
+      const pillar = { name, code: codeFor(name), tone: tone || 'blue', blurb: blurb?.trim() || '' }
+      setDir((d) => ({ ...d, pillars: [...d.pillars, pillar] }))
+      api.addPillar(pillar).catch(failed)
       return null
     },
-    [dir],
+    [dir, failed],
   )
   const removePillar = useCallback(
     (name) => {
@@ -201,9 +292,10 @@ export default function App() {
       if (n) return `${n} task${n === 1 ? ' is' : 's are'} filed under ${name}. Move them first.`
       if (dir.pillars.length === 1) return 'The board needs at least one pillar'
       setDir((d) => ({ ...d, pillars: d.pillars.filter((p) => p.name !== name), workstreams: d.workstreams.filter((w) => w.pillar !== name) }))
+      api.removePillar(name).catch(failed)
       return null
     },
-    [tasks, dir],
+    [tasks, dir, failed],
   )
   const addWorkstream = useCallback(
     ({ name, pillar }) => {
@@ -212,38 +304,55 @@ export default function App() {
       if (!pillar) return 'Pick the pillar it files under'
       if (dir.workstreams.some((w) => w.pillar === pillar && same(w.name, name))) return `${pillar} already has ${name}`
       setDir((d) => ({ ...d, workstreams: [...d.workstreams, { name, pillar }] }))
+      api.addWorkstream({ name, pillar }).catch(failed)
       return null
     },
-    [dir],
+    [dir, failed],
   )
   const removeWorkstream = useCallback(
     ({ name, pillar }) => {
       const n = tasks.filter((t) => t.pillar === pillar && t.workstream === name).length
       if (n) return `${n} task${n === 1 ? ' uses' : 's use'} ${name}. Move them first.`
       setDir((d) => ({ ...d, workstreams: d.workstreams.filter((w) => !(w.name === name && w.pillar === pillar)) }))
+      api.removeWorkstream({ name, pillar }).catch(failed)
       return null
     },
-    [tasks],
+    [tasks, failed],
   )
 
   const set = useCallback((patch) => setSettings((s) => ({ ...s, ...patch })), [])
 
   /* optimistic writes: the UI updates at once, the api call follows */
-  const addTask = useCallback(async (task) => {
-    const tmp = { ...task, id: `tmp-${Date.now()}`, fresh: true }
-    setTasks((all) => [tmp, ...all])
-    const saved = await api.createTask({ ...task })
-    setTasks((all) => all.map((t) => (t.id === tmp.id ? { ...saved, fresh: true } : t)))
-    return saved
-  }, [])
-  const patchTask = useCallback((id, patch) => {
-    setTasks((all) => all.map((t) => (t.id === id ? { ...t, ...patch, moved: true } : t)))
-    api.updateTask(id, patch)
-  }, [])
-  const removeTask = useCallback((id) => {
-    setTasks((all) => all.filter((t) => t.id !== id))
-    api.deleteTask(id)
-  }, [])
+  const addTask = useCallback(
+    async (task) => {
+      const tmp = { ...task, id: `tmp-${Date.now()}`, fresh: true }
+      setTasks((all) => [tmp, ...all])
+      try {
+        const saved = await api.createTask({ ...task })
+        setTasks((all) => (all.some((t) => t.id === saved.id) ? all.filter((t) => t.id !== tmp.id) : all.map((t) => (t.id === tmp.id ? { ...saved, fresh: true } : t))))
+        return saved
+      } catch (e) {
+        setTasks((all) => all.filter((t) => t.id !== tmp.id))
+        failed(e)
+        return null
+      }
+    },
+    [failed],
+  )
+  const patchTask = useCallback(
+    (id, patch) => {
+      setTasks((all) => all.map((t) => (t.id === id ? { ...t, ...patch, moved: true } : t)))
+      api.updateTask(id, patch).catch(failed)
+    },
+    [failed],
+  )
+  const removeTask = useCallback(
+    (id) => {
+      setTasks((all) => all.filter((t) => t.id !== id))
+      api.deleteTask(id).catch(failed)
+    },
+    [failed],
+  )
 
   /** Tick a task done (stamps today as Completed Date) or reopen it. */
   const toggleDone = useCallback(
@@ -367,6 +476,8 @@ export default function App() {
       month,
       today,
       me,
+      session,
+      reload,
       setMe,
       preset,
       setPreset,
@@ -379,11 +490,23 @@ export default function App() {
       removeWorkstream,
       manage: (what, extra) => setSheet({ manage: what, ...extra }),
     }),
-    [page, go, settings, set, toast, spatial, side, right, tasks, addTask, patchTask, removeTask, toggleDone, openTask, month, today, board, archive, me, preset, dir, addPerson, removePerson, addPillar, removePillar, addWorkstream, removeWorkstream],
+    [page, go, settings, set, toast, spatial, side, right, tasks, addTask, patchTask, removeTask, toggleDone, openTask, month, today, board, archive, me, session, reload, preset, dir, addPerson, removePerson, addPillar, removePillar, addWorkstream, removeWorkstream],
   )
 
   const View = VIEWS[page]
   const label = PAGES.find((p) => p.id === page)?.label
+
+  /* with the database, the board is for signed-in @deanda.capital accounts only */
+  const email = session?.user?.email || ''
+  const outsider = session && !email.toLowerCase().endsWith(`@${TEAM_DOMAIN}`) ? email : null
+  if (api.connected && (!session || outsider)) {
+    return (
+      <main className="stage signin-stage" data-layout={spatial ? 'spatial' : 'flat'}>
+        <Environment />
+        <SignIn checking={session === undefined} outsider={outsider} />
+      </main>
+    )
+  }
 
   return (
     <AppContext.Provider value={ctx}>
