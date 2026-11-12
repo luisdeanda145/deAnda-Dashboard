@@ -68,7 +68,7 @@ export default function Announcement({ onDone }) {
             <Icon name="sparkle" size={21} />
           </span>
           <div>
-            <h2 id="announce-title">Claude can now update the board</h2>
+            <h2 id="announce-title">Claude connectivity update</h2>
             <p>An update for the team</p>
           </div>
         </header>
@@ -81,13 +81,13 @@ export default function Announcement({ onDone }) {
         <h3 className="an-h">Set it up (about 5 minutes)</h3>
         <ol className="an-steps">
           <li>
-            In <b>claude.ai</b>, open <b>Settings → Connectors</b> and connect <b>Supabase</b> and <b>Google Drive</b>. Sign in with your @deanda.capital account.
+            In <b>Claude</b>, open <b>Settings → Connectors</b> and connect <b>Supabase</b> and <b>Google Drive</b>. Sign in with your @deanda.capital account.
           </li>
           <li>
-            Create a new <b>Project</b> (call it “Project Board”) and paste the prompt below into its <b>instructions</b>.
+            Go back to <b>Claude</b> and create a new <b>Project</b> (call it “Project Board”).
           </li>
           <li>
-            Start a chat in that project and ask away, e.g. <i>“Add a P1 for me: send the Marathon model to David, due Friday.”</i>
+            Paste the prompt below into the project’s <b>instructions</b>, then start a chat in it and ask Claude to add a task, e.g. <i>“Add a P1 for me: send the Marathon model to David, due Friday.”</i>
           </li>
         </ol>
         <p className="an-note">
