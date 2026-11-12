@@ -57,7 +57,8 @@ the access rules.
 59 edited tasks and 156 new ones. Run it once in the SQL Editor; the result row
 shows how many were edited, added and skipped. A task someone already changed in
 the app is skipped rather than overwritten, nothing is deleted, and running it
-twice changes nothing. (`seed.sql` already includes these for a fresh setup.)
+twice changes nothing. Then `remove-2026-11-brayden.sql` deletes the 7 tasks no
+longer on Brayden's tab. (`seed.sql` already reflects both for a fresh setup.)
 
 ## How the month reset works
 
