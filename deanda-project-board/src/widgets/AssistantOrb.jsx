@@ -4,7 +4,7 @@ import { ThinkingOrb } from 'thinking-orbs'
 export default function AssistantOrb({ onOpen }) {
   return (
     <button type="button" className="win widget orb-tile hl" style={{ '--n': 1 }} aria-label="Open the AI assistant" onClick={onOpen}>
-      <ThinkingOrb state="breathing" size={64} theme="dark" aria-hidden="true" />
+      <ThinkingOrb state="composing" size={64} theme="dark" aria-hidden="true" />
     </button>
   )
 }
