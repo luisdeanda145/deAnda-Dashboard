@@ -516,11 +516,6 @@
   .stage.sheet-open .phone-tabs {
     display: none;
   }
-  [data-layout='flat'] .sheet.announce {
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 40%),
-      rgb(42 37 33);
-  }
   [data-layout='flat'] .sheet.task-sheet {
     width: 100%;
     max-width: 100%;
