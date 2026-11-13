@@ -4,6 +4,9 @@ import Orb from '../components/Orb'
 import { Segmented } from '../components/ui'
 import { ASSISTANT_PERIODS, askAssistant } from '../lib/api'
 
+/* true: the panel shows "Under construction" and asks nothing (the server code stays deployed) */
+const UNDER_CONSTRUCTION = true
+
 const SUGGESTIONS = ['Summarize this period', 'What’s blocked or late?', 'Who logged the most hours?']
 const label = (id) => ASSISTANT_PERIODS.find((p) => p.id === id)?.label
 const PHRASE = { today: 'today', '3days': 'the last 3 days', week: 'this week', month: 'this month' }
@@ -41,6 +44,44 @@ function Reply({ text }) {
  * Read-only: it answers from the board's data and can't change tasks.
  */
 export default function AssistantPanel({ onClose }) {
+  return UNDER_CONSTRUCTION ? <Paused onClose={onClose} /> : <Chat onClose={onClose} />
+}
+
+/** While the assistant is switched off: a text box that doesn't send anything. */
+function Paused({ onClose }) {
+  const input = useRef(null)
+  useEffect(() => {
+    input.current?.focus({ preventScroll: true })
+  }, [])
+  return (
+    <section className="win widget assistant-panel" role="dialog" aria-label="AI assistant" onKeyDown={(e) => e.key === 'Escape' && onClose()}>
+      <header className="as-head">
+        <Orb state="composing" size={20} fps={30} />
+        <h3>Assistant</h3>
+        <span className="as-badge">
+          <Icon name="alert" size={12} stroke={2.2} /> Under construction
+        </span>
+        <button type="button" className="round-btn as-close" aria-label="Close the assistant" onClick={onClose}>
+          <Icon name="close" size={14} stroke={2} />
+        </button>
+      </header>
+      <div className="as-body">
+        <div className="as-empty">
+          <b>Under construction</b>
+          <p>Coming soon: quick summaries of your tasks, hours and the team’s week.</p>
+        </div>
+      </div>
+      <form className="as-compose" onSubmit={(e) => e.preventDefault()}>
+        <textarea ref={input} rows={1} placeholder="Ask the assistant…" aria-label="Message the assistant" onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && e.preventDefault()} />
+        <button type="submit" className="cta" disabled aria-label="Send (coming soon)" title="Coming soon">
+          <Icon name="send" size={16} stroke={2.2} />
+        </button>
+      </form>
+    </section>
+  )
+}
+
+function Chat({ onClose }) {
   const [period, setPeriod] = useState('today')
   const [draft, setDraft] = useState('')
   const [chat, setChat] = useState([]) // { role: 'user' | 'assistant' | 'error', text, period? }
