@@ -52,8 +52,8 @@ export default function Announcement({ onDone }) {
         </div>
 
         <p className="an-lead an-center">
-          Click the orb next to My Open Tasks for quick summaries of the board. Pick today, the last 3 days, this week or this month, and ask what got done, what’s
-          blocked or late, and where the hours went.
+          Get quick summaries of the board. Pick today, the last 3 days, this week or this month, and ask what got done, what’s blocked or late, and where the hours
+          went.
         </p>
 
         <p className="an-sign">-Luis</p>
