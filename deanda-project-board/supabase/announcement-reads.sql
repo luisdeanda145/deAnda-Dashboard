@@ -27,6 +27,28 @@ create policy "update own announcement reads" on public.announcement_reads for u
 create policy "see own announcement reads" on public.announcement_reads for select to authenticated
   using (email = lower(auth.jwt() ->> 'email'));
 
+-- Everyone on the team and where they stand, per announcement.
+-- Open it in Table Editor → announcement_status. Dashboard only: not readable through the app's API.
+create or replace view public.announcement_status
+with (security_invoker = true) as
+select
+  a.announcement,
+  t.name,
+  case
+    when r.acknowledged_at is not null then 'Confirmed'
+    when r.seen_at is not null then 'Seen, not confirmed'
+    else 'Not seen yet'
+  end as status,
+  r.seen_at,
+  r.acknowledged_at
+from (select distinct announcement from public.announcement_reads) a
+cross join public.team_members t
+left join public.announcement_reads r
+  on r.announcement = a.announcement
+ and lower(split_part(r.email, '@', 1)) = lower(t.name)
+order by a.announcement, r.acknowledged_at nulls first, t.name;
+revoke all on public.announcement_status from anon, authenticated;
+
 -- To check who has confirmed (run in the SQL Editor):
 -- select name, email, seen_at, acknowledged_at from public.announcement_reads
 -- where announcement = 'claude-connect-2026-11-b' order by acknowledged_at nulls first;
