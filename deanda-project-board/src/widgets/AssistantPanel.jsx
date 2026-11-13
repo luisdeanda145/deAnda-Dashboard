@@ -5,7 +5,7 @@ import { Segmented } from '../components/ui'
 import { ASSISTANT_PERIODS, askAssistant } from '../lib/api'
 
 /* true: the panel shows "Under construction" and asks nothing (the server code stays deployed) */
-const UNDER_CONSTRUCTION = true
+const UNDER_CONSTRUCTION = false
 
 const SUGGESTIONS = ['Summarize this period', 'What’s blocked or late?', 'Who logged the most hours?']
 const label = (id) => ASSISTANT_PERIODS.find((p) => p.id === id)?.label

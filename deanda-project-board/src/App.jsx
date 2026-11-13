@@ -23,6 +23,8 @@ import HoursWidget from './widgets/HoursWidget'
 import QueueWidget from './widgets/QueueWidget'
 import AssistantOrb from './widgets/AssistantOrb'
 import AssistantPanel from './widgets/AssistantPanel'
+import Announcement from './components/Announcement'
+import { announcementSeen } from './lib/announcement'
 import HoursByDayWidget from './widgets/HoursByDayWidget'
 import Overview from './pages/Overview'
 import MyWork from './pages/MyWork'
@@ -222,6 +224,10 @@ export default function App() {
       stop()
     }
   }, [userId, toast])
+
+  /* a one-time note to the team, the first time each person opens the board */
+  const [announce, setAnnounce] = useState(() => !announcementSeen())
+  const doneAnnounce = useCallback(() => setAnnounce(false), [])
 
   /* who else has the board open (just you in local mode) */
   const [onlineNow, setOnlineNow] = useState([])
@@ -615,7 +621,7 @@ export default function App() {
 
   return (
     <AppContext.Provider value={ctx}>
-      <main ref={stage} className={`stage${sheet ? ' sheet-open' : ''}`} data-layout={spatial ? 'spatial' : 'flat'}>
+      <main ref={stage} className={`stage${sheet || announce ? ' sheet-open' : ''}`} data-layout={spatial ? 'spatial' : 'flat'}>
         <Environment today={today} />
         <div className={`space${side ? '' : ' no-side'}${right ? '' : ' no-right'}${booting ? ' booting' : ''}`} data-page={page}>
           <Online />
@@ -645,6 +651,7 @@ export default function App() {
         {sheet === 'palette' && <Palette onClose={() => setSheet(null)} />}
         {sheet?.manage && <ManageSheet what={sheet.manage} pillar={sheet.pillar} onClose={() => setSheet(null)} />}
         {sheet?.task && <TaskSheet key={sheet.task.id || 'new'} task={sheet.task} hint={sheet.hint} onClose={() => setSheet(null)} />}
+        {announce && <Announcement onDone={doneAnnounce} />}
         <PhoneTabs />
         <SecretBadge />
         <Toasts items={toasts} />
