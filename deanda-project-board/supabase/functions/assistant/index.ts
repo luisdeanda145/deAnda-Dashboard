@@ -224,7 +224,11 @@ Deno.serve(async (req) => {
     asUser.from('team_members').select('name').order('sort'),
     admin.from('assistant_settings').select('value').eq('key', 'prompt').maybeSingle(),
   ])
-  if (tasksRes.error || teamRes.error) return reply({ error: 'Couldn’t load the board.' }, 500)
+  if (tasksRes.error || teamRes.error) {
+    console.error('board load failed', tasksRes.error ?? teamRes.error)
+    return reply({ error: 'Couldn’t load the board.' }, 500)
+  }
+  if (promptRes.error) console.error('prompt load failed', promptRes.error)
   const system = promptRes.data?.value?.trim()
   if (!system) return reply({ error: 'The assistant’s prompt isn’t set up yet.' }, 500)
 
@@ -264,6 +268,7 @@ Deno.serve(async (req) => {
       .trim()
     return reply({ reply: text || 'I don’t have an answer for that.' })
   } catch (e) {
+    console.error('claude request failed', e)
     if (e instanceof Anthropic.RateLimitError) return reply({ error: 'The assistant is busy. Try again in a minute.' }, 429)
     if (e instanceof Anthropic.AuthenticationError) return reply({ error: 'The assistant’s Claude key isn’t working. Check ANTHROPIC_API_KEY.' }, 500)
     if (e instanceof Anthropic.APIError) return reply({ error: 'Claude couldn’t answer right now. Try again shortly.' }, 502)
