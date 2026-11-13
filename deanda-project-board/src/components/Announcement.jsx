@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Icon from './Icon'
 import { useApp } from '../lib/store'
-import { markAnnouncementSeen } from '../lib/announcement'
+import { markAnnouncementSeen, recordAnnouncement } from '../lib/announcement'
 
 const HOLD_MS = 1500
 
@@ -34,7 +34,10 @@ export default function Announcement({ onDone }) {
   const [holding, setHolding] = useState(false)
   const timer = useRef(null)
 
-  useEffect(() => () => clearTimeout(timer.current), [])
+  useEffect(() => {
+    recordAnnouncement() // shown to them
+    return () => clearTimeout(timer.current)
+  }, [])
 
   const start = () => {
     if (timer.current) return
@@ -42,6 +45,7 @@ export default function Announcement({ onDone }) {
     timer.current = setTimeout(() => {
       timer.current = null
       markAnnouncementSeen()
+      recordAnnouncement({ acknowledged: true })
       onDone()
     }, HOLD_MS)
   }
