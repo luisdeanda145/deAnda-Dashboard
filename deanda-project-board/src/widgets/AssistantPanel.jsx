@@ -43,18 +43,19 @@ function Reply({ text }) {
  * The AI assistant over the right column: pick a period, ask for a summary.
  * Read-only: it answers from the board's data and can't change tasks.
  */
-export default function AssistantPanel({ onClose }) {
-  return UNDER_CONSTRUCTION ? <Paused onClose={onClose} /> : <Chat onClose={onClose} />
+export default function AssistantPanel({ onClose, closing, origin }) {
+  const frame = { className: `win widget assistant-panel${closing ? ' closing' : ''}`, style: { transformOrigin: origin } }
+  return UNDER_CONSTRUCTION ? <Paused onClose={onClose} frame={frame} /> : <Chat onClose={onClose} frame={frame} />
 }
 
 /** While the assistant is switched off: a text box that doesn't send anything. */
-function Paused({ onClose }) {
+function Paused({ onClose, frame }) {
   const input = useRef(null)
   useEffect(() => {
     input.current?.focus({ preventScroll: true })
   }, [])
   return (
-    <section className="win widget assistant-panel" role="dialog" aria-label="AI assistant" onKeyDown={(e) => e.key === 'Escape' && onClose()}>
+    <section {...frame} role="dialog" aria-label="AI assistant" onKeyDown={(e) => e.key === 'Escape' && onClose()}>
       <header className="as-head">
         <Orb state="composing" size={20} fps={30} />
         <h3>Assistant</h3>
@@ -81,7 +82,7 @@ function Paused({ onClose }) {
   )
 }
 
-function Chat({ onClose }) {
+function Chat({ onClose, frame }) {
   const [period, setPeriod] = useState('today')
   const [draft, setDraft] = useState('')
   const [chat, setChat] = useState([]) // { role: 'user' | 'assistant' | 'error', text, period? }
@@ -116,7 +117,7 @@ function Chat({ onClose }) {
   }
 
   return (
-    <section className="win widget assistant-panel" role="dialog" aria-label="AI assistant" onKeyDown={(e) => e.key === 'Escape' && onClose()}>
+    <section {...frame} role="dialog" aria-label="AI assistant" onKeyDown={(e) => e.key === 'Escape' && onClose()}>
       <header className="as-head">
         <Orb state="composing" size={20} fps={30} />
         <h3>Assistant</h3>

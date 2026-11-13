@@ -407,7 +407,9 @@
   transform: rotateY(100deg);
 }
 .right > * {
-  transition: opacity 0.4s var(--ease);
+  transition:
+    opacity 0.4s var(--ease),
+    scale 0.55s var(--ease);
 }
 .no-right .right > *,
 .no-right .right .win::before {
@@ -809,6 +811,7 @@
 }
 .right.assistant-open > :not(.assistant-panel) {
   opacity: 0;
+  scale: 0.96;
   pointer-events: none;
 }
 .assistant-panel {
@@ -818,16 +821,47 @@
   display: flex;
   flex-direction: column;
   padding: 18px;
-  animation: assistIn 0.5s var(--spring);
-  transform-origin: 70% 45%;
+  /* grows out of the orb (transform-origin is set to the orb's spot when it opens) */
+  animation: assistIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+.assistant-panel.closing {
+  animation: assistOut 0.34s cubic-bezier(0.5, 0, 0.75, 0) both;
+  pointer-events: none;
+}
+/* the contents settle in just after the panel, and leave first */
 .assistant-panel > * {
-  animation: none;
+  animation: assistContent 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+}
+.assistant-panel.closing > * {
+  animation: assistContentOut 0.16s ease-in both;
 }
 @keyframes assistIn {
   from {
     opacity: 0;
-    transform: scale(0.94);
+    transform: scale(0.3);
+  }
+  40% {
+    opacity: 1;
+  }
+}
+@keyframes assistOut {
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+@keyframes assistContent {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes assistContentOut {
+  to {
+    opacity: 0;
   }
 }
 .as-head {

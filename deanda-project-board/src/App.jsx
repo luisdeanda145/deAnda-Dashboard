@@ -96,7 +96,20 @@ export default function App() {
   const [side, setSide] = useState(true)
   const [right, setRight] = useState(true)
   const [sheet, setSheet] = useState(null) // 'palette' | { task } | null
-  const [assistant, setAssistant] = useState(false) // the AI assistant over the right column
+  /* the AI assistant over the right column: null, or { origin, closing } while open */
+  const [assistant, setAssistant] = useState(null)
+  const openAssistant = useCallback((orb) => {
+    /* it grows out of the orb, so start from the orb's spot in the column */
+    const r = orb.getBoundingClientRect()
+    const col = orb.closest('.right')?.getBoundingClientRect()
+    const origin = col ? `${(((r.left + r.width / 2 - col.left) / col.width) * 100).toFixed(1)}% ${(((r.top + r.height / 2 - col.top) / col.height) * 100).toFixed(1)}%` : 'center'
+    setAssistant({ origin, closing: false })
+  }, [])
+  const closeAssistant = useCallback(() => {
+    setAssistant((a) => (a && !a.closing ? { ...a, closing: true } : a))
+    const still = document.documentElement.dataset.motion === 'off'
+    setTimeout(() => setAssistant(null), still ? 0 : 340)
+  }, [])
   const [toasts, setToasts] = useState([])
   const [booting, setBooting] = useState(true)
   const [spatial, setSpatial] = useState(() => innerWidth >= SPATIAL_MIN)
@@ -616,14 +629,14 @@ export default function App() {
             </div>
           </section>
 
-          <aside className={`facet right${assistant ? ' assistant-open' : ''}`} aria-label="Widgets">
+          <aside className={`facet right${assistant && !assistant.closing ? ' assistant-open' : ''}`} aria-label="Widgets">
             <HoursWidget />
             <div className="queue-row">
               <QueueWidget />
-              <AssistantOrb onOpen={() => setAssistant(true)} />
+              <AssistantOrb onOpen={openAssistant} />
             </div>
             <HoursByDayWidget />
-            {assistant && <AssistantPanel onClose={() => setAssistant(false)} />}
+            {assistant && <AssistantPanel onClose={closeAssistant} closing={assistant.closing} origin={assistant.origin} />}
           </aside>
 
           <Grabber />

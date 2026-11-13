@@ -470,6 +470,7 @@
     transform: none;
   }
   .assistant-panel {
+    transform-origin: 50% 70% !important;
     position: fixed;
     inset: calc(10px + env(safe-area-inset-top)) 10px calc(var(--tabbar) + 14px);
     z-index: 55;
