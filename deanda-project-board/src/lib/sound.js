@@ -1,13 +1,20 @@
 /* ============================================================
    UI sounds (made with ElevenLabs, trimmed to ~1 s, with a 5 ms
    fade-in so they don't pop):
-     tab   — a sidebar or phone tab is selected
-     added — a task is added
+     tab            — a sidebar or phone tab is selected
+     added          — a task is added
+     assistantOpen  — the AI assistant opens
+     assistantClose — the AI assistant closes
    Played through Web Audio: each file is fetched and decoded
    once, then every play is instant and quick clicks can overlap.
    Volume and on/off come from Settings.
    ============================================================ */
-const FILES = { tab: '/sounds/tab-select.mp3', added: '/sounds/task-added.mp3' }
+const FILES = {
+  tab: '/sounds/tab-select.mp3',
+  added: '/sounds/task-added.mp3',
+  assistantOpen: '/sounds/assistant-open.mp3',
+  assistantClose: '/sounds/assistant-close.mp3',
+}
 
 let ctx = null
 const buffers = {}

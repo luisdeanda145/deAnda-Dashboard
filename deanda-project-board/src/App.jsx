@@ -106,9 +106,17 @@ export default function App() {
     const col = orb.closest('.right')?.getBoundingClientRect()
     const origin = col ? `${(((r.left + r.width / 2 - col.left) / col.width) * 100).toFixed(1)}% ${(((r.top + r.height / 2 - col.top) / col.height) * 100).toFixed(1)}%` : 'center'
     setAssistant({ origin, closing: false })
+    play('assistantOpen')
   }, [])
+  const assistantNow = useRef(null)
+  useEffect(() => {
+    assistantNow.current = assistant
+  }, [assistant])
   const closeAssistant = useCallback(() => {
-    setAssistant((a) => (a && !a.closing ? { ...a, closing: true } : a))
+    const a = assistantNow.current
+    if (!a || a.closing) return
+    play('assistantClose')
+    setAssistant({ ...a, closing: true })
     const still = document.documentElement.dataset.motion === 'off'
     setTimeout(() => setAssistant(null), still ? 0 : 340)
   }, [])

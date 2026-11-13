@@ -6,6 +6,8 @@ import { fmtDay, fmtMonth } from '../lib/format'
 import { focusOf, shiftMonth } from '../lib/selectors'
 import { useApp } from '../lib/store'
 import { play } from '../lib/sound'
+
+let previewTimer = 0
 import { connected, signOut } from '../lib/api'
 
 function Slider({ label, hint, value, min, max, step = 1, unit = '', onChange }) {
@@ -110,12 +112,26 @@ export default function Settings() {
           <div className="set-row">
             <div>
               <b>Sounds</b>
-              <small>A soft tick when you switch tabs and a chime when a task is added</small>
+              <small>A soft tick when you switch tabs, a chime when a task is added, and a shimmer when the assistant opens or closes</small>
             </div>
             <Switch on={settings.sound} onChange={(sound) => { set({ sound }); if (sound) setTimeout(() => play('tab'), 0) }} label="Sounds" />
           </div>
           {settings.sound && (
-            <Slider label="Sound volume" value={settings.soundVolume} min={5} max={100} step={5} unit="%" onChange={(soundVolume) => set({ soundVolume })} />
+            <Slider
+              label="Sound volume"
+              hint="Plays a sample as you change it."
+              value={settings.soundVolume}
+              min={5}
+              max={100}
+              step={5}
+              unit="%"
+              onChange={(soundVolume) => {
+                set({ soundVolume })
+                /* a sample at the new level once the slider settles */
+                clearTimeout(previewTimer)
+                previewTimer = setTimeout(() => play('assistantOpen'), 250)
+              }}
+            />
           )}
           <div className="set-row">
             <div>
