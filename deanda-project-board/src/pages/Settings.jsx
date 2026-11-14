@@ -140,6 +140,13 @@ export default function Settings() {
             </div>
             <Switch on={settings.motion} onChange={(motion) => set({ motion })} label="Animations" />
           </div>
+          <div className="set-row">
+            <div>
+              <b>Custom cursor</b>
+              <small>The glowing blue ring in place of the normal pointer</small>
+            </div>
+            <Switch on={settings.cursor !== false} onChange={(cursor) => set({ cursor })} label="Custom cursor" />
+          </div>
         </section>
 
         <section className="card set-group rise" style={{ '--d': 4 }}>

@@ -8,4 +8,5 @@ export const DEFAULTS = {
   sound: true, // tab and task-added sounds
   soundVolume: 30, // %
   motion: true,
+  cursor: true, // the glowing ring cursor (mouse/trackpad only)
 }

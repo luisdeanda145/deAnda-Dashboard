@@ -800,3 +800,98 @@ img {
     background-position: 0 0;
   }
 }
+
+/* ---------------- custom cursor (components/Cursor.jsx) ----------------
+   Mouse and trackpad only. Both parts move with transforms, and the arcs turn
+   with a CSS animation, so the page never repaints for the cursor. */
+.cur-ring,
+.cur-dot {
+  display: none;
+}
+@media (pointer: fine) {
+  .custom-cursor.cursor-on,
+  .custom-cursor.cursor-on * {
+    cursor: none !important;
+  }
+  .custom-cursor.cursor-on.cursor-text input,
+  .custom-cursor.cursor-on.cursor-text textarea,
+  .custom-cursor.cursor-on.cursor-text [contenteditable='true'] {
+    cursor: text !important;
+  }
+  .cur-ring,
+  .cur-dot {
+    display: block;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 2147483000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    will-change: transform;
+  }
+  .cursor-on .cur-ring,
+  .cursor-on .cur-dot {
+    opacity: 1;
+  }
+  .cursor-on.cursor-text .cur-ring,
+  .cursor-on.cursor-text .cur-dot {
+    opacity: 0;
+  }
+  /* the ring: thin pale line, blue glow, two bright arcs that slowly turn */
+  .cur-ring i {
+    position: absolute;
+    left: -15px;
+    top: -15px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid rgba(226, 243, 255, 0.85);
+    box-shadow:
+      0 0 8px 1px rgba(64, 150, 255, 0.55),
+      inset 0 0 6px rgba(64, 150, 255, 0.35);
+    transition:
+      transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.4),
+      border-color 0.2s;
+  }
+  .cur-ring i::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    background: conic-gradient(from 300deg, transparent 0 8%, rgba(150, 205, 255, 0.9) 13%, #fff 17%, rgba(150, 205, 255, 0.9) 21%, transparent 27% 50%, rgba(150, 205, 255, 0.9) 63%, #fff 67%, rgba(150, 205, 255, 0.9) 71%, transparent 77%);
+    -webkit-mask: radial-gradient(circle, transparent 55%, #000 62%, #000 70%, transparent 74%);
+    mask: radial-gradient(circle, transparent 55%, #000 62%, #000 70%, transparent 74%);
+    filter: drop-shadow(0 0 3px rgba(80, 160, 255, 0.9));
+    animation: curSpin 6s linear infinite;
+  }
+  .cursor-hover .cur-ring i {
+    transform: scale(1.45);
+    border-color: rgba(226, 243, 255, 0.55);
+  }
+  .cursor-down .cur-ring i {
+    transform: scale(0.75);
+  }
+  .cursor-hover.cursor-down .cur-ring i {
+    transform: scale(1.15);
+  }
+  /* the dot: small white point with a blue halo, exactly on the pointer */
+  .cur-dot i {
+    position: absolute;
+    left: -3px;
+    top: -3px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 6px 2px rgba(64, 150, 255, 0.75);
+  }
+}
+@keyframes curSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+[data-motion='off'] .cur-ring i::before {
+  animation: none;
+}
