@@ -24,6 +24,7 @@ import QueueWidget from './widgets/QueueWidget'
 import AssistantOrb from './widgets/AssistantOrb'
 import AssistantPanel from './widgets/AssistantPanel'
 import Announcement from './components/Announcement'
+import SecretUpdate from './components/SecretUpdate'
 import { announcementSeen } from './lib/announcement'
 import HoursByDayWidget from './widgets/HoursByDayWidget'
 import Overview from './pages/Overview'
@@ -236,6 +237,7 @@ export default function App() {
   /* a one-time note to the team, the first time each person opens the board */
   const [announce, setAnnounce] = useState(() => !announcementSeen())
   const doneAnnounce = useCallback(() => setAnnounce(false), [])
+  const showAnnounce = useCallback(() => setAnnounce(true), [])
 
   /* who else has the board open (just you in local mode) */
   const [onlineNow, setOnlineNow] = useState([])
@@ -662,6 +664,7 @@ export default function App() {
         {announce && <Announcement onDone={doneAnnounce} />}
         <PhoneTabs />
         <SecretBadge />
+        <SecretUpdate onOpen={showAnnounce} />
         <Toasts items={toasts} />
       </main>
     </AppContext.Provider>

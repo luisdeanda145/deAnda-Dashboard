@@ -1,17 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-
-const PAD = 14 // gap from the screen edge
-const GAP = 12 // gap kept from every window
-const MAX = 96
-
-/** The biggest square that fits at the top-left corner without touching any window. */
-function room() {
-  const rects = [...document.querySelectorAll('.space > .side, .space > .main, .space > .right, .space > .grabber')].map((el) => el.getBoundingClientRect()).filter((r) => r.width && r.height)
-  /* a square [PAD, PAD + s] stays clear of a window if it ends before the window's left or top edge */
-  const fits = rects.map((r) => Math.max(r.left, r.top) - PAD - GAP)
-  return Math.min(MAX, ...fits)
-}
+import { PAD, cornerSize } from '../lib/corner'
 
 /**
  * A hidden extra: an invisible spot in the top-left corner of the screen, exactly
@@ -24,7 +13,7 @@ export default function SecretBadge() {
   const [size, setSize] = useState(0)
 
   useEffect(() => {
-    const fit = () => setSize(room())
+    const fit = () => setSize(cornerSize())
     const first = requestAnimationFrame(fit)
     const settled = setTimeout(fit, 2200) // again once the windows have finished settling in
     addEventListener('resize', fit)
