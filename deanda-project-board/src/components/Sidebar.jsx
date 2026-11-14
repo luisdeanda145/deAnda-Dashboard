@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import Icon from './Icon'
-import { Avatar } from './ui'
+import { Avatar, Who } from './ui'
 import { USER, WORKSPACE } from '../data/board'
 import { PAGES } from '../data/pages'
 import { daysInMonth, fmtMonth, shortMonth } from '../lib/format'
@@ -102,7 +102,9 @@ export default function Sidebar() {
           <div className="side-me">
             <Avatar person={USER.name} size={34} status="online" />
             <div>
-              <b>{USER.name}</b>
+              <b>
+                <Who name={USER.name} />
+              </b>
               <small>{USER.role}</small>
             </div>
           </div>

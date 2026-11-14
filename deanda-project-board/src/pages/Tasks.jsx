@@ -1,6 +1,6 @@
 import { Fragment, useState } from 'react'
 import Icon from '../components/Icon'
-import { Avatar, PageHead, Prio, Segmented, Select, StatusPill, TaskDates } from '../components/ui'
+import { Avatar, PageHead, Prio, Segmented, Select, StatusPill, TaskDates, Who } from '../components/ui'
 import { ALL_PILLARS, TEAM, pillarTone } from '../data/board'
 import { dayName, diffDays, fmtDay, hrs, todayISO, weekName, weekStart } from '../lib/format'
 import { HYGIENE, isDone } from '../lib/selectors'
@@ -160,7 +160,7 @@ export default function Tasks() {
                       <td>
                         <span className="who sm">
                           <Avatar person={t.owner} size={26} />
-                          {t.owner}
+                          <Who name={t.owner} />
                         </span>
                       </td>
                       <td className="t-pillar">

@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import Icon from './Icon'
-import { Avatar } from './ui'
+import { Avatar, Who } from './ui'
 import { TEAM } from '../data/board'
 import { useApp } from '../lib/store'
 
@@ -151,7 +151,9 @@ export default function Messages({ onClose }) {
                 <Avatar person={p.name} size={30} />
                 <span className="cp-text">
                   <span className="cp-top">
-                    <b>{p.name}</b>
+                    <b>
+                      <Who name={p.name} />
+                    </b>
                     {p.last && <time>{short(p.last.created_at)}</time>}
                   </span>
                   <span className="cp-last">{p.last ? `${p.last.from_name === myName ? 'You: ' : ''}${p.last.body}` : 'No messages yet'}</span>
@@ -167,7 +169,9 @@ export default function Messages({ onClose }) {
             <>
               <div className="chat-who">
                 <Avatar person={chat.name} size={26} />
-                <b>{chat.name}</b>
+                <b>
+                  <Who name={chat.name} />
+                </b>
               </div>
               <ol className="chat-msgs" ref={scroller}>
                 {thread.length === 0 && <li className="chat-empty">No messages with {chat.name} this month. Say hi.</li>}

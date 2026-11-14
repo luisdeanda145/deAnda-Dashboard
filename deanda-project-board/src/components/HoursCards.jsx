@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Avatar, CardHead } from './ui'
+import { Avatar, CardHead, Who } from './ui'
 import { PILLARS, TEAM, pillarTone } from '../data/board'
 import { dow, fmtDay, hrs, todayISO } from '../lib/format'
 import { dailyHours, loggedIn } from '../lib/selectors'
@@ -33,7 +33,7 @@ export function DailyHoursTracker({ tasks, month, delay = 5 }) {
         {rows.map((r, ri) => (
           <div className="heat-row" key={r.name} style={{ '--i': ri }}>
             <span className="heat-who">
-              <Avatar person={r.name} size={22} /> {r.name}
+              <Avatar person={r.name} size={22} /> <Who name={r.name} />
             </span>
             {r.days.map((v, c) => (
               <i

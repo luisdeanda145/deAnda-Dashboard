@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import Icon from './Icon'
-import { Avatar, Segmented, Select } from './ui'
+import { Avatar, Segmented, Select, Who } from './ui'
 import { ALL_PILLARS, PRIORITIES, STATUSES, TEAM, USER, workstreamsFor } from '../data/board'
 import { fmtMonth, todayISO } from '../lib/format'
 import { useApp } from '../lib/store'
@@ -149,7 +149,7 @@ export default function TaskSheet({ task, hint, onClose }) {
               align="left"
               render={(n) => (
                 <span className="sel-person">
-                  <Avatar person={n} size={20} /> {n}
+                  <Avatar person={n} size={20} /> <Who name={n} />
                 </span>
               )}
             />

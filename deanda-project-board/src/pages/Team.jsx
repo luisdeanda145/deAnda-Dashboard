@@ -1,5 +1,5 @@
 import Icon from '../components/Icon'
-import { Avatar, CardHead, PageHead } from '../components/ui'
+import { Avatar, CardHead, PageHead, Who } from '../components/ui'
 import { fmtMonth, hrs } from '../lib/format'
 import { byPerson } from '../lib/selectors'
 import { useApp } from '../lib/store'
@@ -36,7 +36,9 @@ export default function Team() {
               <header>
                 <Avatar person={p.name} size={44} />
                 <div>
-                  <b>{p.name}</b>
+                  <b>
+                    <Who name={p.name} />
+                  </b>
                   <small>{p.role}</small>
                 </div>
                 <button type="button" className="round-btn" aria-label={`Open ${p.name}’s tab`} data-tip="Open tab" onClick={() => view(p.name)}>
@@ -106,7 +108,7 @@ export default function Team() {
                   <td>
                     <span className="who sm">
                       <Avatar person={p.name} size={26} />
-                      {p.name}
+                      <Who name={p.name} />
                     </span>
                   </td>
                   <td className="num">{p.planned}</td>

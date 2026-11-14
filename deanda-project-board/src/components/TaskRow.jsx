@@ -1,5 +1,5 @@
 import Icon from './Icon'
-import { Prio, StatusPill, TaskDates } from './ui'
+import { Prio, StatusPill, TaskDates, Who } from './ui'
 import { pillarTone } from '../data/board'
 import { hrs, pts } from '../lib/format'
 import { isDone } from '../lib/selectors'
@@ -20,7 +20,9 @@ export function TaskRow({ t, d, showOwner }) {
       <div className="task-body">
         <b>{t.title}</b>
         <span>
-          {showOwner && <em className="task-owner">{t.owner}</em>}
+          {showOwner && <em className="task-owner">
+              <Who name={t.owner} />
+            </em>}
           {t.pillar && <i className={`dot ${pillarTone(t.pillar)}`} />}
           {[t.pillar, t.workstream].filter(Boolean).join(' · ') || 'No pillar'}
           {t.notes && <em className="task-note"> — {t.notes}</em>}

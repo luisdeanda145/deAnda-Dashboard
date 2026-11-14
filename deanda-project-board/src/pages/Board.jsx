@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import Icon from '../components/Icon'
-import { Avatar, PageHead, Prio, Segmented, Select, TaskDates } from '../components/ui'
+import { Avatar, PageHead, Prio, Segmented, Select, TaskDates, Who } from '../components/ui'
 import { ALL_PILLARS, PRIORITIES, STATUSES, TEAM, pillarTone } from '../data/board'
 import { addDays, hrs, pts, sameWeek, todayISO } from '../lib/format'
 import { useApp } from '../lib/store'
@@ -160,7 +160,7 @@ export default function Board() {
                       <footer>
                         <span className="tcard-owner">
                           <Avatar person={t.owner} size={22} />
-                          {t.owner}
+                          <Who name={t.owner} />
                         </span>
                         <TaskDates t={t} stack={t.status === 'Done'} />
                         {t.points != null && <span title="Story points">{pts(t.points)}</span>}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import Icon from '../components/Icon'
-import { Avatar, PageHead, Segmented, Select, Stat } from '../components/ui'
+import { Avatar, PageHead, Segmented, Select, Stat, Who } from '../components/ui'
 import { TEAM, USER } from '../data/board'
 import { fmtMonth, todayISO } from '../lib/format'
 import { isDone, personal } from '../lib/selectors'
@@ -44,7 +44,7 @@ export default function MyWork() {
           onChange={setMe}
           render={(n) => (
             <span className="sel-person">
-              <Avatar person={n} size={22} /> {n}
+              <Avatar person={n} size={22} /> <Who name={n} />
             </span>
           )}
         />

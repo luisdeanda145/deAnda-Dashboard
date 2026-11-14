@@ -1,5 +1,5 @@
 import Icon from '../components/Icon'
-import { Avatar, PageHead, Switch } from '../components/ui'
+import { Avatar, PageHead, Switch, Who } from '../components/ui'
 import { DEFAULTS } from '../lib/settings'
 import { PILLARS, TEAM, USER, WORKSTREAMS } from '../data/board'
 import { fmtDay, fmtMonth } from '../lib/format'
@@ -155,7 +155,7 @@ export default function Settings() {
                 <Avatar person={p.name} size={30} />
                 <div>
                   <b>
-                    {p.name}
+                    <Who name={p.name} />
                     {p.name === USER.name && <em> · you</em>}
                   </b>
                   <small>{p.role || focusOf(tasks, p.name)}</small>

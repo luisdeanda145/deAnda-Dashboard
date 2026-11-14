@@ -122,11 +122,20 @@ export function Grip() {
 }
 
 /** A heading whose words arrive one after another. */
+/* names with their own look, for everyone who sees them */
+const NAME_STYLE = { Luis: 'name-luis' }
+
+/** A person's name as text, styled if that person has a look of their own. */
+export function Who({ name }) {
+  const cls = NAME_STYLE[name]
+  return cls ? <span className={cls}>{name}</span> : name
+}
+
 export function Words({ text }) {
   const words = text.split(' ')
   return words.map((w, i) => (
     <Fragment key={i}>
-      <span className="word" style={{ '--i': i }} aria-hidden="true">
+      <span className={`word${NAME_STYLE[w.replace(/[^\w]/g, '')] ? ` ${NAME_STYLE[w.replace(/[^\w]/g, '')]}` : ''}`} style={{ '--i': i }} aria-hidden="true">
         {w}
       </span>
       {i < words.length - 1 && ' '}

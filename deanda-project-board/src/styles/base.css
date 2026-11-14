@@ -772,3 +772,27 @@ img {
     transition-duration: 0.001s !important;
   }
 }
+
+/* ---------------- Luis's name: rose gold with a slow shimmer ----------------
+   The gradient is clipped to the text and slides across it. Stepped timing
+   repaints the name about 6 times a second instead of 60, which is plenty for
+   a slow sheen and keeps it nearly free. Static with animations off. */
+.name-luis {
+  background: linear-gradient(100deg, #b76e79 0%, #e8a89a 18%, #ffe0d2 30%, #f2b8a6 42%, #c27f78 58%, #e9b2a2 76%, #b76e79 100%) 0 0 / 200% 100% repeat-x;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: roseGold 9s steps(54) infinite;
+}
+.word.name-luis {
+  animation:
+    wordIn 0.9s var(--ease) backwards,
+    roseGold 9s steps(54) infinite;
+  animation-delay: calc(var(--base, 0ms) + var(--i) * 80ms), 0s;
+}
+@keyframes roseGold {
+  to {
+    background-position: 200% 0;
+  }
+}
