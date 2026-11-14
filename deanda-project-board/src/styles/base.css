@@ -844,10 +844,10 @@ img {
   /* the ring: thin pale line, blue glow, two bright arcs that slowly turn */
   .cur-ring i {
     position: absolute;
-    left: -15px;
-    top: -15px;
-    width: 30px;
-    height: 30px;
+    left: -13px;
+    top: -13px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     border: 1px solid rgba(226, 243, 255, 0.85);
     box-shadow:
@@ -868,8 +868,16 @@ img {
     filter: drop-shadow(0 0 3px rgba(80, 160, 255, 0.9));
     animation: curSpin 6s linear infinite;
   }
+  /* over anything clickable it grows back to 30px */
+  .cursor-hover .cur-ring i {
+    transform: scale(1.154);
+    border-color: rgba(226, 243, 255, 0.6);
+  }
   .cursor-down .cur-ring i {
     transform: scale(0.75);
+  }
+  .cursor-hover.cursor-down .cur-ring i {
+    transform: scale(0.95);
   }
   /* the dot: small white point with a blue halo, exactly on the pointer */
   .cur-dot i {
