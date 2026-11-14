@@ -62,3 +62,12 @@
 [data-season='christmas'] .heat-bar em {
   background: linear-gradient(180deg, var(--xmas-green), rgba(76, 195, 138, 0.5));
 }
+
+/* a few touches of pine green, so it reads Christmas rather than just red */
+[data-season='christmas'] .mt-bar i {
+  background: var(--xmas-green);
+}
+[data-season='christmas'] .nav-item.on svg,
+[data-season='christmas'] .card-head h3 svg {
+  color: #7fd9a8;
+}
