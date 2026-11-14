@@ -22,6 +22,7 @@ export default function Cursor() {
     const at = { x: -100, y: -100 }
     let raf = 0
     let shown = false
+    let idle = 0
 
     const glide = () => {
       const still = root.dataset.motion === 'off'
@@ -50,6 +51,10 @@ export default function Cursor() {
       root.classList.toggle('cursor-hover', !!t?.closest(CLICKABLE))
       show(true)
       if (!raf) raf = requestAnimationFrame(glide)
+      /* the arcs turn while the mouse moves and rest a moment after it stops */
+      root.classList.remove('cursor-idle')
+      clearTimeout(idle)
+      idle = setTimeout(() => root.classList.add('cursor-idle'), 1500)
     }
     const down = () => root.classList.add('cursor-down')
     const up = () => root.classList.remove('cursor-down')
@@ -61,11 +66,12 @@ export default function Cursor() {
     document.addEventListener('pointerout', leave)
     return () => {
       cancelAnimationFrame(raf)
+      clearTimeout(idle)
       removeEventListener('pointermove', move)
       removeEventListener('pointerdown', down)
       removeEventListener('pointerup', up)
       document.removeEventListener('pointerout', leave)
-      root.classList.remove('custom-cursor', 'cursor-on', 'cursor-text', 'cursor-hover', 'cursor-down')
+      root.classList.remove('custom-cursor', 'cursor-on', 'cursor-text', 'cursor-hover', 'cursor-down', 'cursor-idle')
     }
   }, [])
 

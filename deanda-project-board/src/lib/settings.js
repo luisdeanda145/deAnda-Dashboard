@@ -1,3 +1,6 @@
+/* the glowing ring cursor (components/Cursor.jsx): off for now; true brings it back, with its Settings switch */
+export const CUSTOM_CURSOR = false
+
 /** Default look of the space; Settings → Reset view restores these. */
 export const DEFAULTS = {
   curve: 16,

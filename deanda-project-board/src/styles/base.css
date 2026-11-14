@@ -778,7 +778,7 @@ img {
 
 /* ---------------- Luis's name: Man City sky blue with a slow shimmer ----------------
    The gradient is clipped to the text and slides across it. Stepped timing
-   repaints the name 10 times a second instead of 60, which is plenty for
+   repaints the name 6 times a second instead of 60, which is plenty for
    a slow sheen and keeps it nearly free. Static with animations off. */
 .name-luis {
   /* two highlights per tile, one name-width apart, so one is always crossing the name */
@@ -787,12 +787,12 @@ img {
   background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
-  animation: nameShine 7s steps(70) infinite;
+  animation: nameShine 7s steps(42) infinite;
 }
 .word.name-luis {
   animation:
     wordIn 0.9s var(--ease) backwards,
-    nameShine 7s steps(70) infinite;
+    nameShine 7s steps(42) infinite;
   animation-delay: calc(var(--base, 0ms) + var(--i) * 80ms), 0s;
 }
 @keyframes nameShine {
@@ -857,16 +857,16 @@ img {
       transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.4),
       border-color 0.2s;
   }
+  /* the two bright arcs, drawn once as an image, so turning them is a plain rotation */
   .cur-ring i::before {
     content: '';
     position: absolute;
-    inset: -2px;
-    border-radius: 50%;
-    background: conic-gradient(from 300deg, transparent 0 8%, rgba(150, 205, 255, 0.9) 13%, #fff 17%, rgba(150, 205, 255, 0.9) 21%, transparent 27% 50%, rgba(150, 205, 255, 0.9) 63%, #fff 67%, rgba(150, 205, 255, 0.9) 71%, transparent 77%);
-    -webkit-mask: radial-gradient(circle, transparent 55%, #000 62%, #000 70%, transparent 74%);
-    mask: radial-gradient(circle, transparent 55%, #000 62%, #000 70%, transparent 74%);
-    filter: drop-shadow(0 0 3px rgba(80, 160, 255, 0.9));
+    inset: -3px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cfilter id='g' x='-50%' y='-50%' width='200%' height='200%'%3E%3CfeGaussianBlur stdDeviation='1.3'/%3E%3C/filter%3E%3Cpath d='M2.93 11.76 A12.5 12.5 0 0 1 11.76 2.93 M27.07 18.24 A12.5 12.5 0 0 1 18.24 27.07' fill='none' stroke='%2350a0ff' stroke-width='3' stroke-linecap='round' filter='url(%23g)' opacity='.9'/%3E%3Cpath d='M2.93 11.76 A12.5 12.5 0 0 1 11.76 2.93 M27.07 18.24 A12.5 12.5 0 0 1 18.24 27.07' fill='none' stroke='%23a8d4ff' stroke-width='1.4' stroke-linecap='round'/%3E%3Cpath d='M4.17 8.75 A12.5 12.5 0 0 1 8.75 4.17 M25.83 21.25 A12.5 12.5 0 0 1 21.25 25.83' fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
     animation: curSpin 6s linear infinite;
+  }
+  .cursor-idle .cur-ring i::before {
+    animation-play-state: paused;
   }
   /* over anything clickable it grows back to 30px */
   .cursor-hover .cur-ring i {
