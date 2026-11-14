@@ -43,9 +43,9 @@ function wander(path, dt, sec) {
   return [pts[i][0] + (pts[i + 1][0] - pts[i][0]) * k, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * k]
 }
 
-const SCALE = 0.3 // the clouds are soft blurs: a small canvas, stretched, looks the same
+const SCALE = 0.4 // the clouds are soft blurs: a small canvas, stretched, looks the same
 
-/** The Hours Logged card's moving sky, drawn on one small canvas 15 times a second. */
+/** The Hours Logged card's moving sky, drawn on one small canvas 24 times a second. */
 export default function Clouds() {
   const ref = useRef(null)
 
@@ -64,7 +64,7 @@ export default function Clouds() {
     const ro = new ResizeObserver(size)
     ro.observe(canvas)
 
-    const stop = frameLoop(canvas, 15, (sec) => {
+    const stop = frameLoop(canvas, 24, (sec) => {
       const pal = PALETTES[document.documentElement.dataset.season] || PALETTES.default
       ctx.setTransform(1, 0, 0, 1, 0, 0)
       ctx.clearRect(0, 0, W, H)

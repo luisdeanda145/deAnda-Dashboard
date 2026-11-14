@@ -26,7 +26,6 @@ import AssistantPanel from './widgets/AssistantPanel'
 import Announcement from './components/Announcement'
 import SecretUpdate from './components/SecretUpdate'
 import Cursor from './components/Cursor'
-import { CUSTOM_CURSOR } from './lib/settings'
 import { announcementSeen } from './lib/announcement'
 import HoursByDayWidget from './widgets/HoursByDayWidget'
 import Overview from './pages/Overview'
@@ -674,7 +673,7 @@ export default function App() {
         {sheet?.task && <TaskSheet key={sheet.task.id || 'new'} task={sheet.task} hint={sheet.hint} onClose={() => setSheet(null)} />}
         {announce && <Announcement onDone={doneAnnounce} />}
         <PhoneTabs />
-        {CUSTOM_CURSOR && settings.cursor !== false && <Cursor />}
+        {settings.cursor !== false && <Cursor />}
         <SecretBadge />
         <SecretUpdate onOpen={showAnnounce} />
         <SecretUpdate side="right" onOpen={cycleSeason} />

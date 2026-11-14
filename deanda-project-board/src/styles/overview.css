@@ -665,7 +665,7 @@
    motions on separate loops (a wandering path, a slow swirl around an
    off-centre point, and a stretch), with different lengths per cloud,
    so the pattern never visibly repeats. They're drawn by src/widgets/Clouds.jsx
-   on one small canvas, 15 times a second (they're soft blurs, so a small,
+   on one small canvas, 24 times a second (they're soft blurs, so a small,
    slower canvas looks the same and costs far less than seven moving layers). */
 .contacts {
   flex-shrink: 0;
