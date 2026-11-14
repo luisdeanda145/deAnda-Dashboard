@@ -34,6 +34,19 @@
     radial-gradient(120% 80% at 50% 45%, transparent 55%, rgba(24, 16, 8, 0.3)),
     linear-gradient(180deg, rgba(30, 22, 14, 0.06), rgba(30, 22, 14, 0.2));
 }
+/* Christmas snow, over the room photo and behind every window */
+.env-snow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  animation: snowIn 2.5s ease both;
+}
+@keyframes snowIn {
+  from {
+    opacity: 0;
+  }
+}
 @keyframes envIn {
   from {
     opacity: 0;
