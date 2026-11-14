@@ -866,14 +866,14 @@ img {
     animation: curSpin 6s linear infinite;
   }
   .cursor-hover .cur-ring i {
-    transform: scale(1.45);
+    transform: scale(1.2);
     border-color: rgba(226, 243, 255, 0.55);
   }
   .cursor-down .cur-ring i {
     transform: scale(0.75);
   }
   .cursor-hover.cursor-down .cur-ring i {
-    transform: scale(1.15);
+    transform: scale(1);
   }
   /* the dot: small white point with a blue halo, exactly on the pointer */
   .cur-dot i {
