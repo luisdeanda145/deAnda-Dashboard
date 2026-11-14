@@ -761,6 +761,8 @@ img {
 [data-motion='off'] *::after {
   animation-duration: 0.001s !important;
   animation-delay: 0s !important;
+  /* loops play once and stop, instead of flickering a thousand times a second */
+  animation-iteration-count: 1 !important;
   transition-duration: 0.001s !important;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -769,6 +771,7 @@ img {
   *::after {
     animation-duration: 0.001s !important;
     animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.001s !important;
   }
 }
