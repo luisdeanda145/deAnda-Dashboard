@@ -1,8 +1,8 @@
 import { BACKGROUNDS, seasonFor } from '../lib/season'
 import { todayISO } from '../lib/format'
 
-/** The room photo the windows float in. Seasonal versions take over around
-    Thanksgiving and through December (see src/lib/season.js). */
+/** The room photo the windows float in. The Christmas version takes over
+    through December (see src/lib/season.js). */
 export default function Environment({ today = todayISO(), preview = null }) {
   const season = preview || seasonFor(today)
   return (

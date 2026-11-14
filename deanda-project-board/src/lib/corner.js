@@ -1,5 +1,5 @@
 /* Hidden spots in the screen corners (SecretBadge top-left, SecretUpdate
-   bottom-left, SecretSeason bottom-right). All the same size: the biggest square,
+   bottom-left, the season preview bottom-right). All the same size: the biggest square,
    up to MAX, that fits in all three corners without touching any window. Under 28px (e.g. on a phone)
    there's no room and no spot. */
 export const PAD = 14 // gap from the screen edge

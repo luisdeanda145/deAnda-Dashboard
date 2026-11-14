@@ -354,10 +354,10 @@ export default function App() {
     document.documentElement.dataset.season = season
   }, [season])
   const cycleSeason = useCallback(() => {
-    const order = ['default', 'fall', 'christmas']
+    const order = ['default', 'christmas']
     const next = order[(order.indexOf(season) + 1) % order.length]
     setSeasonPreview(next)
-    toast({ icon: 'sparkle', title: `Preview: ${{ default: 'Normal', fall: 'Fall', christmas: 'Christmas' }[next]}`, text: 'Only on this screen. Reload to go back to today’s.' })
+    toast({ icon: 'sparkle', title: `Preview: ${{ default: 'Normal', christmas: 'Christmas' }[next]}`, text: 'Only on this screen. Reload to go back to today’s.' })
   }, [season, toast])
 
   /* the board is always this calendar month's; past months are in Insights */
