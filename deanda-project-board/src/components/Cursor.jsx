@@ -8,7 +8,7 @@ const EASE = 0.3 // how far the ring closes on the pointer each frame
 /**
  * The custom cursor: a glowing sky-blue ring with two bright arcs that slowly
  * turn, around a small white dot. The dot sits exactly on the pointer; the ring
- * glides after it, grows over anything clickable and tightens on a click.
+ * glides after it and tightens on a click.
  * Text fields keep the normal I-beam. Mouse and trackpad only (never on touch).
  */
 export default function Cursor() {
