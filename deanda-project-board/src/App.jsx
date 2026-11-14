@@ -346,10 +346,19 @@ export default function App() {
     }
   }, [announceClosed, reload])
 
-  /* the season themes the whole page (background + Christmas colours), and moves on at midnight */
+  /* the season themes the whole page (background + Christmas colours), and moves on at midnight.
+     The hidden bottom-right spot cycles a preview of each look (this browser, until reload). */
+  const [seasonPreview, setSeasonPreview] = useState(null)
+  const season = seasonPreview || seasonFor(today)
   useEffect(() => {
-    document.documentElement.dataset.season = seasonFor(today)
-  }, [today])
+    document.documentElement.dataset.season = season
+  }, [season])
+  const cycleSeason = useCallback(() => {
+    const order = ['default', 'fall', 'christmas']
+    const next = order[(order.indexOf(season) + 1) % order.length]
+    setSeasonPreview(next)
+    toast({ icon: 'sparkle', title: `Preview: ${{ default: 'Normal', fall: 'Fall', christmas: 'Christmas' }[next]}`, text: 'Only on this screen. Reload to go back to today’s.' })
+  }, [season, toast])
 
   /* the board is always this calendar month's; past months are in Insights */
   const month = today.slice(0, 7)
@@ -623,7 +632,7 @@ export default function App() {
   if (api.connected && (!session || outsider)) {
     return (
       <main className="stage signin-stage" data-layout={spatial ? 'spatial' : 'flat'}>
-        <Environment today={today} />
+        <Environment today={today} preview={seasonPreview} />
         <SignIn checking={session === undefined} outsider={outsider} />
       </main>
     )
@@ -632,7 +641,7 @@ export default function App() {
   return (
     <AppContext.Provider value={ctx}>
       <main ref={stage} className={`stage${sheet || announce ? ' sheet-open' : ''}`} data-layout={spatial ? 'spatial' : 'flat'}>
-        <Environment today={today} />
+        <Environment today={today} preview={seasonPreview} />
         <div className={`space${side ? '' : ' no-side'}${right ? '' : ' no-right'}${booting ? ' booting' : ''}`} data-page={page}>
           <Online />
           <Sidebar />
@@ -665,6 +674,7 @@ export default function App() {
         <PhoneTabs />
         <SecretBadge />
         <SecretUpdate onOpen={showAnnounce} />
+        <SecretUpdate side="right" onOpen={cycleSeason} />
         <Toasts items={toasts} />
       </main>
     </AppContext.Provider>

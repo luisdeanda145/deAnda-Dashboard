@@ -3,10 +3,11 @@ import { createPortal } from 'react-dom'
 import { PAD, cornerSize } from '../lib/corner'
 
 /**
- * An invisible spot in the bottom-left corner, the same size as the badge spot
- * in the top-left. Click it to bring back the current update pop-up.
+ * An invisible spot in a bottom corner, the same size as the badge spot in the
+ * top-left. Bottom-left brings back the current update pop-up; bottom-right
+ * cycles the season previews.
  */
-export default function SecretUpdate({ onOpen }) {
+export default function SecretUpdate({ onOpen, side = 'left' }) {
   const [size, setSize] = useState(0)
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export default function SecretUpdate({ onOpen }) {
 
   if (size < 28) return null
   return createPortal(
-    <button type="button" className="secret-spot" aria-hidden="true" tabIndex={-1} style={{ width: size, height: size, left: PAD, bottom: PAD }} onClick={onOpen} />,
+    <button type="button" className="secret-spot" aria-hidden="true" tabIndex={-1} style={{ width: size, height: size, [side]: PAD, bottom: PAD }} onClick={onOpen} />,
     document.body,
   )
 }
