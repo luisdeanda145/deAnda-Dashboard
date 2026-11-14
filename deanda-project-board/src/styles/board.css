@@ -2317,7 +2317,7 @@
   position: fixed;
   z-index: 200;
   padding: 0;
-  border-radius: 50%;
+  border-radius: 0; /* square, so the very corner of the screen counts too */
   border: 0;
   background: transparent;
   cursor: default;

@@ -24,7 +24,7 @@ export default function SecretUpdate({ onOpen, side = 'left' }) {
 
   if (size < 28) return null
   return createPortal(
-    <button type="button" className="secret-spot" aria-hidden="true" tabIndex={-1} style={{ width: size, height: size, [side]: PAD, bottom: PAD }} onClick={onOpen} />,
+    <button type="button" className="secret-spot" aria-hidden="true" tabIndex={-1} style={{ width: size + PAD, height: size + PAD, [side]: 0, bottom: 0 }} onClick={onOpen} />,
     document.body,
   )
 }

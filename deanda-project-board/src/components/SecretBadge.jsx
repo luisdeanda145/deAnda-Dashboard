@@ -29,7 +29,7 @@ export default function SecretBadge() {
   return createPortal(
     <>
       {shown && <img className="secret-badge" src="/badge.svg" alt="" style={box} />}
-      <button type="button" className="secret-spot" aria-hidden="true" tabIndex={-1} style={box} onClick={() => setShown((s) => !s)} />
+      <button type="button" className="secret-spot" aria-hidden="true" tabIndex={-1} style={{ width: size + PAD, height: size + PAD, left: 0, top: 0 }} onClick={() => setShown((s) => !s)} />
     </>,
     document.body,
   )
